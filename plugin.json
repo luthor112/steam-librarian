@@ -1,0 +1,9 @@
+{
+    "$schema": "https://raw.githubusercontent.com/SteamClientHomebrew/Millennium/main/src/sys/plugin-schema.json",
+
+    "name": "steam-librarian",
+    "common_name": "Steam Librarian",
+    "description": "Extra functionality for the Steam Library tab",
+    "versionj": "1.0.0",
+    "include": ["config.json"]
+}

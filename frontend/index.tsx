@@ -36,7 +36,11 @@ async function autoClickGame() {
         var doc = g_PopupManager.GetExistingPopup("SP Desktop_uid0").m_popup.document;
         var gameItem = Array.from(doc.querySelectorAll('div.ReactVirtualized__Grid__innerScrollContainer > div.Panel > div > div.Focusable')).find(el => el.textContent === gameName);
 
-        gameItem.click();
+        if (gameItem != undefined) {
+            gameItem.click();
+        } else {
+            setTimeout(autoClickGame, 300);
+        }
     }
 }
 

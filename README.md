@@ -11,3 +11,6 @@ A Millennium plugin that adds extra functionality for the Steam Library tab.
 
 ## Prerequisites
 - [Millennium](https://steambrew.app/)
+
+## Known bugs:
+- `autoselect` doesn't always work the first time the Library tab is opened

@@ -11,13 +11,13 @@ def get_config(plugin_name):
 class Backend:
     @staticmethod
     def get_autoselect_item():
-        autoselect_item = get_config("library-autoselect")["autoselect"]
+        autoselect_item = get_config("steam-librarian")["autoselect"]
         logger.log(f"get_autoselect_item() -> {autoselect_item}")
         return autoselect_item
 
     @staticmethod
     def get_open_details():
-        open_details = get_config("library-autoselect")["open_details"]
+        open_details = get_config("steam-librarian")["open_details"]
         logger.log(f"get_open_details() -> {open_details}")
         return open_details
 

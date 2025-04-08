@@ -21,6 +21,12 @@ class Backend:
         logger.log(f"get_open_details() -> {open_details}")
         return open_details
 
+    @staticmethod
+    def get_library_size():
+        library_size = get_config("steam-librarian")["library_size"]
+        logger.log(f"get_library_size() -> {library_size}")
+        return library_size
+
 class Plugin:
     def _front_end_loaded(self):
         logger.log("frontend loaded")

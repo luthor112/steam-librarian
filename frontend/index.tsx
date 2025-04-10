@@ -3,80 +3,54 @@ import { callable, findClassModule, findModule, Millennium } from "@steambrew/cl
 // Backend functions
 const get_autoselect_item = callable<[{}], string>('Backend.get_autoselect_item');
 const get_open_details = callable<[{}], boolean>('Backend.get_open_details');
-const get_library_size = callable<[{}], boolean>('Backend.get_library_size');
+const get_library_size = callable<[{}], string>('Backend.get_library_size');
+const get_millennium_systray = callable<[{}], boolean>('Backend.get_millennium_systray');
 
-function ensureDocExists() {
-    try {
-        var doc = g_PopupManager.GetExistingPopup("SP Desktop_uid0").m_popup.document;
-        if (doc != undefined) {
-            registerEvent();
-        } else {
-            setTimeout(ensureDocExists, 300);
-        }
-    } catch {
-        setTimeout(ensureDocExists, 300);
-    }
-}
+const WaitForElement = async (sel: string, parent = document) =>
+	[...(await Millennium.findElement(parent, sel))][0];
 
-function registerEvent() {
-    var doc = g_PopupManager.GetExistingPopup("SP Desktop_uid0").m_popup.document;
-    var libraryButton = Array.from(doc.querySelectorAll(`div.${findModule(e => e.SuperNavMenu).SuperNavMenu}`)).find(el => el.textContent === findModule(e => e.MainTabsLibrary).MainTabsLibrary);
-    var gameList = doc.querySelector('div.ReactVirtualized__Grid__innerScrollContainer');
+const WaitForElementTimeout = async (sel: string, parent = document, timeOut = 1000) =>
+	[...(await Millennium.findElement(parent, sel, timeOut))][0];
 
-    if (libraryButton != undefined && gameList != undefined) {
-        libraryButton.addEventListener("click", autoClickGame);
-        libraryButton.addEventListener("click", resizeLibraryList);
-        gameList.addEventListener("click", gameSelected);
-    } else {
-        setTimeout(registerEvent, 300);
-    }
-}
+const WaitForElementList = async (sel: string, parent = document) =>
+	[...(await Millennium.findElement(parent, sel))];
 
-async function autoClickGame() {
-    const gameName = await get_autoselect_item({});
-    if (gameName !== "") {
-        var doc = g_PopupManager.GetExistingPopup("SP Desktop_uid0").m_popup.document;
-        var gameItem = Array.from(doc.querySelectorAll('div.ReactVirtualized__Grid__innerScrollContainer > div.Panel > div > div.Focusable')).find(el => el.textContent === gameName);
+async function OnPopupCreation(popup: any) {
+    if (popup.m_strName === "SP Desktop_uid0") {
+        const mainTabs = await WaitForElementList(`div.${findModule(e => e.SuperNavMenu).SuperNavMenu}`, popup.m_popup.document);
+        const libraryButton = mainTabs.find(el => el.textContent === findModule(e => e.MainTabsLibrary).MainTabsLibrary);
+        const gameList = await WaitForElement('div.ReactVirtualized__Grid__innerScrollContainer', popup.m_popup.document);
 
-        if (gameItem != undefined) {
-            gameItem.click();
-        } else {
-            setTimeout(autoClickGame, 300);
-        }
-    }
-}
-
-async function resizeLibraryList() {
-    const desiredLibrarySize = await get_library_size({});
-    if (desiredLibrarySize !== "") {
-        var doc = g_PopupManager.GetExistingPopup("SP Desktop_uid0").m_popup.document;
-        var gameList = doc.querySelector('div.LibraryDisplaySizeSmall, div.LibraryDisplaySizeMedium, div.LibraryDisplaySizeLarge').firstChild;
-
-        if (gameList != undefined) {
-            gameList.style = `width: ${desiredLibrarySize}; min-width: 1px !important;`;
-        } else {
-            setTimeout(resizeLibraryList, 300);
-        }
-    }
-}
-
-async function gameSelected() {
-    const autoOpenDetails = await get_open_details({});
-    if (autoOpenDetails) {
-        var doc = g_PopupManager.GetExistingPopup("SP Desktop_uid0").m_popup.document;
-        var expandedGameDetails = doc.querySelector(`div.${findModule(e => e.AppDetailsExpanded).AppDetailsExpanded}`);
-        var collapsedGameDetails = doc.querySelector(`div.${findModule(e => e.AppDetailsCollapsed).AppDetailsCollapsed}`);
-
-        if (expandedGameDetails == undefined && collapsedGameDetails == undefined) {
-            setTimeout(gameSelected, 300);
-        }
-
-        if (collapsedGameDetails) {
-            var infoIcon = doc.querySelector(`div.${findModule(e => e.InPage).InPage} div.${findModule(e => e.AppButtonsContainer).AppButtonsContainer} svg.SVGIcon_Information`);
-            if (infoIcon) {
-                infoIcon.parentElement.click();
+        libraryButton.addEventListener("click", async () => {
+            const gameName = await get_autoselect_item({});
+            if (gameName !== "") {
+                const gameListItemList = await WaitForElementList('div.ReactVirtualized__Grid__innerScrollContainer > div.Panel > div > div.Focusable', popup.m_popup.document);
+                const gameItem = gameListItemList.find(el => el.textContent === gameName);
+                if (gameItem) {
+                    gameItem.click();
+                }
             }
-        }
+        });
+
+        libraryButton.addEventListener("click", async () => {
+            const desiredLibrarySize = await get_library_size({});
+            if (desiredLibrarySize !== "") {
+                const yolo = await WaitForElement('div.LibraryDisplaySizeSmall, div.LibraryDisplaySizeMedium, div.LibraryDisplaySizeLarge', popup.m_popup.document);
+                const leftPanel = yolo.firstChild;
+                leftPanel.style = `width: ${desiredLibrarySize}; min-width: 1px !important;`;
+            }
+        });
+
+        gameList.addEventListener("click", async () => {
+            const autoOpenDetails = await get_open_details({});
+            if (autoOpenDetails) {
+                const collapsedGameDetails = await WaitForElementTimeout(`div.${findModule(e => e.AppDetailsCollapsed).AppDetailsCollapsed}`, popup.m_popup.document);
+                if (collapsedGameDetails) {
+                    const infoIcon = await WaitForElement(`div.${findModule(e => e.InPage).InPage} div.${findModule(e => e.AppButtonsContainer).AppButtonsContainer} svg.SVGIcon_Information`, popup.m_popup.document);
+                    infoIcon.parentElement.click();
+                }
+            }
+        });
     }
 }
 
@@ -84,12 +58,18 @@ export default async function PluginMain() {
     console.log("[steam-librarian] frontend startup");
 
     // Call the backend methods and log the configuration
-    const ret1 = await get_autoselect_item({});
-    console.log("[steam-librarian] Result from get_autoselect_item:", ret1);
-    const ret2 = await get_open_details({});
-    console.log("[steam-librarian] Result from get_open_details:", ret2);
-    const ret3 = await get_library_size({});
-    console.log("[steam-librarian] Result from get_library_size:", ret3);
+    const gameName = await get_autoselect_item({});
+    console.log("[steam-librarian] Result from get_autoselect_item:", gameName);
+    const autoOpenDetails = await get_open_details({});
+    console.log("[steam-librarian] Result from get_open_details:", autoOpenDetails);
+    const desiredLibrarySize = await get_library_size({});
+    console.log("[steam-librarian] Result from get_library_size:", desiredLibrarySize);
+    const systrayEnabled = await get_millennium_systray({});
+    console.log("[steam-librarian] Result from get_millennium_systray:", systrayEnabled);
 
-    ensureDocExists();
+    const doc = g_PopupManager.GetExistingPopup("SP Desktop_uid0");
+	if (doc) {
+		OnPopupCreation(doc);
+	}
+	g_PopupManager.AddPopupCreatedCallback(OnPopupCreation);
 }

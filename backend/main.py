@@ -27,6 +27,12 @@ class Backend:
         logger.log(f"get_library_size() -> {library_size}")
         return library_size
 
+    @staticmethod
+    def get_millennium_systray():
+        millennium_systray = get_config("steam-librarian")["millennium_systray"]
+        logger.log(f"get_millennium_systray() -> {millennium_systray}")
+        return millennium_systray
+
 class Plugin:
     def _front_end_loaded(self):
         logger.log("frontend loaded")

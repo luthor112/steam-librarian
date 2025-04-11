@@ -3,6 +3,7 @@ logger = PluginUtils.Logger()
 
 import json
 import os
+import webbrowser
 
 def get_config(plugin_name):
     with open(os.path.join(Millennium.steam_path(), "plugins", plugin_name, "config.json"), "rt") as fp:
@@ -32,6 +33,11 @@ class Backend:
         millennium_systray = get_config("steam-librarian")["millennium_systray"]
         logger.log(f"get_millennium_systray() -> {millennium_systray}")
         return millennium_systray
+
+    @staticmethod
+    def open_millennium_settings():
+        webbrowser.open("steam://millennium")
+        return True
 
 class Plugin:
     def _front_end_loaded(self):

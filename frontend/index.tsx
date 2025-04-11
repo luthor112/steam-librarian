@@ -5,6 +5,7 @@ const get_autoselect_item = callable<[{}], string>('Backend.get_autoselect_item'
 const get_open_details = callable<[{}], boolean>('Backend.get_open_details');
 const get_library_size = callable<[{}], string>('Backend.get_library_size');
 const get_millennium_systray = callable<[{}], boolean>('Backend.get_millennium_systray');
+const open_millennium_settings = callable<[{}], boolean>('Backend.open_millennium_settings');
 
 const WaitForElement = async (sel: string, parent = document) =>
 	[...(await Millennium.findElement(parent, sel))][0];
@@ -51,6 +52,19 @@ async function OnPopupCreation(popup: any) {
                 }
             }
         });
+    } else if (popup.m_strTitle === "Menu") {
+        const systrayEnabled = await get_millennium_systray({});
+        if (systrayEnabled) {
+            const menuItemList = await WaitForElementList(`div.contextMenuItem > div.${findModule(e => e.JumpListItemText).JumpListItemText}`, popup.m_popup.document);
+            const settingsItem = menuItemList.find(el => el.textContent === findModule(e => e.Settings).Settings).parentElement;
+            const millenniumItem = settingsItem.cloneNode(true);
+
+            millenniumItem.firstChild.textContent = "Millennium";
+            settingsItem.parentNode.insertBefore(millenniumItem, settingsItem.nextSibling);
+            millenniumItem.addEventListener("click", async () => {
+                await open_millennium_settings({});
+            });
+        }
     }
 }
 
@@ -71,5 +85,12 @@ export default async function PluginMain() {
 	if (doc) {
 		OnPopupCreation(doc);
 	}
+
+    g_PopupManager.m_mapPopups.data_.forEach(popup => {
+        if (popup.value_.m_strTitle === "Menu") {
+            OnPopupCreation(popup.value_);
+        }
+    });
+
 	g_PopupManager.AddPopupCreatedCallback(OnPopupCreation);
 }

@@ -5,6 +5,7 @@ const get_autoselect_item = callable<[{}], string>('Backend.get_autoselect_item'
 const get_open_details = callable<[{}], boolean>('Backend.get_open_details');
 const get_library_size = callable<[{}], string>('Backend.get_library_size');
 const get_millennium_systray = callable<[{}], boolean>('Backend.get_millennium_systray');
+const get_remove_news = callable<[{}], boolean>('Backend.get_remove_news');
 const open_millennium_settings = callable<[{}], boolean>('Backend.open_millennium_settings');
 
 const WaitForElement = async (sel: string, parent = document) =>
@@ -39,6 +40,16 @@ async function OnPopupCreation(popup: any) {
                 const yolo = await WaitForElement('div.LibraryDisplaySizeSmall, div.LibraryDisplaySizeMedium, div.LibraryDisplaySizeLarge', popup.m_popup.document);
                 const leftPanel = yolo.firstChild;
                 leftPanel.style = `width: ${desiredLibrarySize}; min-width: 1px !important;`;
+            }
+        });
+
+        libraryButton.addEventListener("click", async () => {
+            const removeNews = await get_remove_news({});
+            if (removeNews) {
+                const newsElement = await WaitForElementTimeout(`div.${findModule(e => e.UpdatesContainer).UpdatesContainer}`, popup.m_popup.document);
+                if (newsElement) {
+                    newsElement.remove();
+                }
             }
         });
 
@@ -80,6 +91,8 @@ export default async function PluginMain() {
     console.log("[steam-librarian] Result from get_library_size:", desiredLibrarySize);
     const systrayEnabled = await get_millennium_systray({});
     console.log("[steam-librarian] Result from get_millennium_systray:", systrayEnabled);
+    const removeNews = await get_remove_news({});
+    console.log("[steam-librarian] Result from get_remove_news:", removeNews);
 
     const doc = g_PopupManager.GetExistingPopup("SP Desktop_uid0");
 	if (doc) {

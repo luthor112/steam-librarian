@@ -35,6 +35,12 @@ class Backend:
         return millennium_systray
 
     @staticmethod
+    def get_remove_news():
+        remove_news = get_config("steam-librarian")["remove_news"]
+        logger.log(f"get_remove_news() -> {remove_news}")
+        return remove_news
+
+    @staticmethod
     def open_millennium_settings():
         webbrowser.open("steam://millennium")
         return True

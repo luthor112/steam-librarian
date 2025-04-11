@@ -9,6 +9,7 @@ A Millennium plugin that adds extra functionality for the Steam Library tab.
     - Pixels: `NNpx`, example: `60px`
     - Percentage: `NN%`, example: `10%`
 - To add a Millennium menu item to the System Tray menu, set `millennium_systray` to `true`
+- To remove the What's New section of the Library, set `remove_news` to `true`
 
 Big thanks to canitakemasoulbackpls!
 

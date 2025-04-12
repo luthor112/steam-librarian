@@ -6,7 +6,9 @@ const get_open_details = callable<[{}], boolean>('Backend.get_open_details');
 const get_library_size = callable<[{}], string>('Backend.get_library_size');
 const get_millennium_systray = callable<[{}], boolean>('Backend.get_millennium_systray');
 const get_remove_news = callable<[{}], boolean>('Backend.get_remove_news');
+const get_taskbar_progress_enabled = callable<[{}], boolean>('Backend.get_taskbar_progress_enabled');
 const open_millennium_settings = callable<[{}], boolean>('Backend.open_millennium_settings');
+const set_progress_percent = callable<[{ percent: number }], boolean>('Backend.set_progress_percent');
 
 const WaitForElement = async (sel: string, parent = document) =>
 	[...(await Millennium.findElement(parent, sel))][0];
@@ -16,6 +18,14 @@ const WaitForElementTimeout = async (sel: string, parent = document, timeOut = 1
 
 const WaitForElementList = async (sel: string, parent = document) =>
 	[...(await Millennium.findElement(parent, sel))];
+
+// TODO: Remove
+async function test_func(progress = 10) {
+    await set_progress_percent({ percent: progress });
+    if (progress < 100) {
+        setTimeout(test_func, 1000, progress + 10);
+    }
+}
 
 async function OnPopupCreation(popup: any) {
     if (popup.m_strName === "SP Desktop_uid0") {
@@ -63,6 +73,26 @@ async function OnPopupCreation(popup: any) {
                 }
             }
         });
+
+        const taskbarProgressEnabled = await get_taskbar_progress_enabled({});
+        if (taskbarProgressEnabled) {
+            const downloadStatusPlace = await WaitForElement(`div.${findModule(e => e.DownloadStatusContent).DownloadStatusContent}`, popup.m_popup.document);
+            const downloadStatusPlaceObserver = new MutationObserver(async (mutationList, observer) => {
+                const downloadDetails = downloadStatusPlace.querySelector(`div.${findModule(e => e.DetailedDownloadProgress).DetailedDownloadProgress}`);
+                if (downloadDetails) {
+                    const downloadProgressBar = await WaitForElement(`div.${findModule(e => e.AnimateProgress).AnimateProgress}`, downloadDetails);
+                    const fromPercent = downloadProgressBar.style.cssText.substring(downloadProgressBar.style.cssText.indexOf("--percent:"));
+                    const realPercent = Number(fromPercent.substring(11, fromPercent.indexOf(";")))*100;
+
+                    console.log("[steam-librarian] Porgress bar percentage:", realPercent);
+                    await set_progress_percent({ percent: realPercent });
+                } else {
+                    console.log("[steam-librarian] Download disappeared...");
+                    await set_progress_percent({ percent: -1 });
+                }
+            });
+            downloadStatusPlaceObserver.observe(downloadStatusPlace, { childList: true, attributes: true, subtree: true });
+        }
     } else if (popup.m_strTitle === "Menu") {
         const systrayEnabled = await get_millennium_systray({});
         if (systrayEnabled) {
@@ -93,6 +123,8 @@ export default async function PluginMain() {
     console.log("[steam-librarian] Result from get_millennium_systray:", systrayEnabled);
     const removeNews = await get_remove_news({});
     console.log("[steam-librarian] Result from get_remove_news:", removeNews);
+    const taskbarProgressEnabled = await get_taskbar_progress_enabled({});
+    console.log("[steam-librarian] Result from get_taskbar_progress_enabled:", taskbarProgressEnabled);
 
     const doc = g_PopupManager.GetExistingPopup("SP Desktop_uid0");
 	if (doc) {

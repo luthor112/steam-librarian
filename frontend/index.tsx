@@ -1,4 +1,4 @@
-import { callable, findClassModule, findModule, Millennium } from "@steambrew/client";
+import { callable, findClassModule, findModule, Millennium, Menu, MenuItem, showContextMenu } from "@steambrew/client";
 
 // Backend functions
 const get_autoselect_item = callable<[{}], string>('Backend.get_autoselect_item');
@@ -7,6 +7,9 @@ const get_library_size = callable<[{}], string>('Backend.get_library_size');
 const get_millennium_systray = callable<[{}], boolean>('Backend.get_millennium_systray');
 const get_remove_news = callable<[{}], boolean>('Backend.get_remove_news');
 const get_taskbar_progress_enabled = callable<[{}], boolean>('Backend.get_taskbar_progress_enabled');
+const get_extra_options_count = callable<[{}], number>('Backend.get_extra_options_count');
+const get_extra_option = callable<[{ opt_num: number }], string>('Backend.get_extra_option');
+const run_extra_option = callable<[{ opt_num: number, app_id: number }], boolean>('Backend.run_extra_option');
 const open_millennium_settings = callable<[{}], boolean>('Backend.open_millennium_settings');
 const set_progress_percent = callable<[{ percent: number }], boolean>('Backend.set_progress_percent');
 
@@ -74,6 +77,38 @@ async function OnPopupCreation(popup: any) {
             }
         });
 
+        gameList.addEventListener("click", async () => {
+            const extraOptionsCount = await get_extra_options_count({});
+            if (extraOptionsCount > 0) {
+                setTimeout(async () => {
+                    const gameSettingsButton = await WaitForElement(`div.${findModule(e => e.InPage).InPage} div.${findModule(e => e.AppButtonsContainer).AppButtonsContainer} > div.${findModule(e => e.MenuButtonContainer).MenuButtonContainer}:not([role="button"])`, popup.m_popup.document);
+                    const oldExtraSettingsButton = gameSettingsButton.parentNode.querySelector('div.extra-settings-button');
+                    if (!oldExtraSettingsButton) {
+                        const extraSettingsButton = gameSettingsButton.cloneNode(true);
+                        extraSettingsButton.classList.add("extra-settings-button");
+                        extraSettingsButton.firstChild.innerHTML = "+";
+                        gameSettingsButton.parentNode.insertBefore(extraSettingsButton, gameSettingsButton.nextSibling);
+
+                        extraSettingsButton.addEventListener("click", async () => {
+                            const extraMenuItems = [];
+                            for (let i = 0; i < extraOptionsCount; i++) {
+                                const itemName = await get_extra_option({ opt_num: i });
+                                extraMenuItems.push(<MenuItem onClick={async () => { await run_extra_option({ opt_num: i, app_id: uiStore.currentGameListSelection.nAppId }); }}> {itemName} </MenuItem>);
+                            }
+
+                            showContextMenu(
+                                <Menu label="Extra Options">
+                                    {extraMenuItems}
+                                </Menu>,
+                                extraSettingsButton,
+                                { bForcePopup: true }
+                            );
+                        });
+                    }
+                }, 1000);
+            }
+        });
+
         const taskbarProgressEnabled = await get_taskbar_progress_enabled({});
         if (taskbarProgressEnabled) {
             const downloadStatusPlace = await WaitForElement(`div.${findModule(e => e.DownloadStatusContent).DownloadStatusContent}`, popup.m_popup.document);
@@ -125,6 +160,8 @@ export default async function PluginMain() {
     console.log("[steam-librarian] Result from get_remove_news:", removeNews);
     const taskbarProgressEnabled = await get_taskbar_progress_enabled({});
     console.log("[steam-librarian] Result from get_taskbar_progress_enabled:", taskbarProgressEnabled);
+    const extraOptionsCount = await get_extra_options_count({});
+    console.log("[steam-librarian] Result from get_extra_options_count:", extraOptionsCount);
 
     const doc = g_PopupManager.GetExistingPopup("SP Desktop_uid0");
 	if (doc) {

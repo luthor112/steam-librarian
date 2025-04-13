@@ -3,6 +3,8 @@ logger = PluginUtils.Logger()
 
 import json
 import os
+import shlex
+import subprocess
 import sys
 import webbrowser
 
@@ -52,8 +54,38 @@ class Backend:
         return taskbar_progress
 
     @staticmethod
+    def get_extra_options_count():
+        extra_options_count = len(get_config("steam-librarian")["extra_options"])
+        logger.log(f"get_extra_options_count() -> {extra_options_count}")
+        return extra_options_count
+
+    @staticmethod
+    def get_extra_option(opt_num):
+        extra_options_count = len(get_config("steam-librarian")["extra_options"])
+        if opt_num > -1 and opt_num < extra_options_count:
+            extra_option_name = get_config("steam-librarian")["extra_options"][opt_num]["title"]
+            return extra_option_name
+        else:
+            logger.log("get_extra_option() called with invalid index")
+            return ""
+
+    @staticmethod
+    def run_extra_option(opt_num, app_id):
+        extra_options_count = len(get_config("steam-librarian")["extra_options"])
+        if opt_num > -1 and opt_num < extra_options_count:
+            if "command" in get_config("steam-librarian")["extra_options"][opt_num]:
+                subprocess.Popen(get_config("steam-librarian")["extra_options"][opt_num]["command"].replace("<APPID>", str(app_id)))
+                return True
+            elif "url" in get_config("steam-librarian")["extra_options"][opt_num]:
+                webbrowser.open(get_config("steam-librarian")["extra_options"][opt_num]["url"].replace("<APPID>", str(app_id)))
+                return True
+        else:
+            logger.log("run_extra_option() called with invalid index")
+            return False
+
+    @staticmethod
     def open_millennium_settings():
-        logger.log(f"open_millennium_settings()")
+        logger.log("open_millennium_settings()")
         webbrowser.open("steam://millennium")
         return True
 
@@ -94,7 +126,7 @@ class Plugin:
         logger.log("frontend loaded")
 
     def _load(self):
-        logger.log(f"backend loaded")
+        logger.log("backend loaded")
         Millennium.ready()
 
     def _unload(self):

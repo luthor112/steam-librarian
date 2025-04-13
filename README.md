@@ -12,6 +12,10 @@ A Millennium plugin that adds extra functionality for the Steam Library tab.
 - To remove the What's New section of the Library, set `remove_news` to `true`
 - To display download progress under the taskbar icon, set `taskbar_progress` to `true`
     - This functionality is only supported on Windows
+- To add items to the extra Settings menu of every game, fill `extra_options` with a list of objects:
+    - To run a command, add `{ "title": "TITLE_HERE", "command": "COMMAND_HERE <APPID>" }`
+    - To open a webpage, add `{ "title": "TITLE_HERE", "url": "URL_HERE/<APPID>" }`
+    - In both cases. `<APPID>` will be replaced by the Steam AppID
 
 Big thanks to canitakemasoulbackpls!
 

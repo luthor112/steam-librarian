@@ -17,6 +17,8 @@ A Millennium plugin that adds extra functionality for the Steam Library tab.
     - To open a webpage, add `{ "title": "TITLE_HERE", "url": "URL_HERE/<APPID>" }`
     - In both cases. `<APPID>` will be replaced by the Steam AppID
 
+Steam has to be restarted for configuration changes to take effect!
+
 Big thanks to canitakemasoulbackpls!
 
 ## Configuration

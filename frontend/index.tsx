@@ -36,50 +36,53 @@ async function OnPopupCreation(popup: any) {
         const libraryButton = mainTabs.find(el => el.textContent === findModule(e => e.MainTabsLibrary).MainTabsLibrary);
         const gameList = await WaitForElement('div.ReactVirtualized__Grid__innerScrollContainer', popup.m_popup.document);
 
-        libraryButton.addEventListener("click", async () => {
-            const gameName = await get_autoselect_item({});
-            if (gameName !== "") {
+        const _gameName = await get_autoselect_item({});
+        if (_gameName !== "") {
+            libraryButton.addEventListener("click", async () => {
+                const gameName = await get_autoselect_item({});
                 const gameListItemList = await WaitForElementList('div.ReactVirtualized__Grid__innerScrollContainer > div.Panel > div > div.Focusable', popup.m_popup.document);
                 const gameItem = gameListItemList.find(el => el.textContent === gameName);
                 if (gameItem) {
                     gameItem.click();
                 }
-            }
-        });
+            });
+        }
 
-        libraryButton.addEventListener("click", async () => {
-            const desiredLibrarySize = await get_library_size({});
-            if (desiredLibrarySize !== "") {
-                const yolo = await WaitForElement('div.LibraryDisplaySizeSmall, div.LibraryDisplaySizeMedium, div.LibraryDisplaySizeLarge', popup.m_popup.document);
-                const leftPanel = yolo.firstChild;
+        const desiredLibrarySize = await get_library_size({});
+        if (desiredLibrarySize !== "") {
+            libraryButton.addEventListener("click", async () => {
+                const libraryDisplay = await WaitForElement('div.LibraryDisplaySizeSmall, div.LibraryDisplaySizeMedium, div.LibraryDisplaySizeLarge', popup.m_popup.document);
+                const leftPanel = libraryDisplay.firstChild;
                 leftPanel.style = `width: ${desiredLibrarySize}; min-width: 1px !important;`;
-            }
-        });
+            });
+        }
 
-        libraryButton.addEventListener("click", async () => {
-            const removeNews = await get_remove_news({});
-            if (removeNews) {
+        const removeNews = await get_remove_news({});
+        if (removeNews) {
+            libraryButton.addEventListener("click", async () => {
                 const newsElement = await WaitForElementTimeout(`div.${findModule(e => e.UpdatesContainer).UpdatesContainer}`, popup.m_popup.document);
                 if (newsElement) {
                     newsElement.remove();
                 }
-            }
-        });
+            });
+        }
 
-        gameList.addEventListener("click", async () => {
-            const autoOpenDetails = await get_open_details({});
-            if (autoOpenDetails) {
-                const collapsedGameDetails = await WaitForElementTimeout(`div.${findModule(e => e.AppDetailsCollapsed).AppDetailsCollapsed}`, popup.m_popup.document);
-                if (collapsedGameDetails) {
-                    const infoIcon = await WaitForElement(`div.${findModule(e => e.InPage).InPage} div.${findModule(e => e.AppButtonsContainer).AppButtonsContainer} svg.SVGIcon_Information`, popup.m_popup.document);
-                    infoIcon.parentElement.click();
-                }
-            }
-        });
+        const autoOpenDetails = await get_open_details({});
+        if (autoOpenDetails) {
+            gameList.addEventListener("click", async () => {
+                try {
+                    const collapsedGameDetails = await WaitForElementTimeout(`div.${findModule(e => e.AppDetailsCollapsed).AppDetailsCollapsed}`, popup.m_popup.document);
+                    if (collapsedGameDetails) {
+                        const infoIcon = await WaitForElement(`div.${findModule(e => e.InPage).InPage} div.${findModule(e => e.AppButtonsContainer).AppButtonsContainer} svg.SVGIcon_Information`, popup.m_popup.document);
+                        infoIcon.parentElement.click();
+                    }
+                } catch {}
+            });
+        }
 
-        gameList.addEventListener("click", async () => {
-            const extraOptionsCount = await get_extra_options_count({});
-            if (extraOptionsCount > 0) {
+        const extraOptionsCount = await get_extra_options_count({});
+        if (extraOptionsCount > 0) {
+            gameList.addEventListener("click", async () => {
                 setTimeout(async () => {
                     const gameSettingsButton = await WaitForElement(`div.${findModule(e => e.InPage).InPage} div.${findModule(e => e.AppButtonsContainer).AppButtonsContainer} > div.${findModule(e => e.MenuButtonContainer).MenuButtonContainer}:not([role="button"])`, popup.m_popup.document);
                     const oldExtraSettingsButton = gameSettingsButton.parentNode.querySelector('div.extra-settings-button');
@@ -106,8 +109,8 @@ async function OnPopupCreation(popup: any) {
                         });
                     }
                 }, 1000);
-            }
-        });
+            });
+        }
 
         const taskbarProgressEnabled = await get_taskbar_progress_enabled({});
         if (taskbarProgressEnabled) {

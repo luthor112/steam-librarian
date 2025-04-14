@@ -60,10 +60,12 @@ async function OnPopupCreation(popup: any) {
         const removeNews = await get_remove_news({});
         if (removeNews) {
             libraryButton.addEventListener("click", async () => {
-                const newsElement = await WaitForElementTimeout(`div.${findModule(e => e.UpdatesContainer).UpdatesContainer}`, popup.m_popup.document);
-                if (newsElement) {
-                    newsElement.remove();
-                }
+                try {
+                    const newsElement = await WaitForElementTimeout(`div.${findModule(e => e.UpdatesContainer).UpdatesContainer}`, popup.m_popup.document);
+                    if (newsElement) {
+                        newsElement.remove();
+                    }
+                } catch {}
             });
         }
 

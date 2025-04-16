@@ -13,7 +13,7 @@ if sys.platform == "win32":
     import PyTaskbar
 
 def get_config(plugin_name):
-    with open(os.path.join(Millennium.steam_path(), "plugins", plugin_name, "config.json"), "rt") as fp:
+    with open(os.path.join(PLUGIN_BASE_DIR, "config.json"), "rt") as fp:
         return json.load(fp)
 
 class Backend:
@@ -123,11 +123,12 @@ class Backend:
 
 class Plugin:
     def _front_end_loaded(self):
-        logger.log("frontend loaded")
+        logger.log("Frontend loaded")
 
     def _load(self):
-        logger.log("backend loaded")
+        logger.log("Backend loaded")
+        logger.log(f"Plugin base dir: {PLUGIN_BASE_DIR}")
         Millennium.ready()
 
     def _unload(self):
-        logger.log("unloading")
+        logger.log("Unloading")

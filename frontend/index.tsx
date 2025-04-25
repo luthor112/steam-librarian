@@ -9,7 +9,6 @@ const get_remove_news = callable<[{}], boolean>('Backend.get_remove_news');
 const get_extra_options_count = callable<[{}], number>('Backend.get_extra_options_count');
 const get_extra_option = callable<[{ opt_num: number }], string>('Backend.get_extra_option');
 const run_extra_option = callable<[{ opt_num: number, app_id: number }], boolean>('Backend.run_extra_option');
-const open_millennium_settings = callable<[{}], boolean>('Backend.open_millennium_settings');
 
 const WaitForElement = async (sel: string, parent = document) =>
 	[...(await Millennium.findElement(parent, sel))][0];
@@ -113,7 +112,7 @@ async function OnPopupCreation(popup: any) {
             millenniumItem.firstChild.textContent = "Millennium";
             settingsItem.parentNode.insertBefore(millenniumItem, settingsItem.nextSibling);
             millenniumItem.addEventListener("click", async () => {
-                await open_millennium_settings({});
+                window.open("steam://millennium", "_blank");
             });
         }
     }

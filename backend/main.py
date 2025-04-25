@@ -71,12 +71,6 @@ class Backend:
             logger.log("run_extra_option() called with invalid index")
             return False
 
-    @staticmethod
-    def open_millennium_settings():
-        logger.log("open_millennium_settings()")
-        webbrowser.open("steam://millennium")
-        return True
-
 class Plugin:
     def _front_end_loaded(self):
         logger.log("Frontend loaded")

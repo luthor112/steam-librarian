@@ -8,7 +8,7 @@ const get_millennium_systray = callable<[{}], boolean>('Backend.get_millennium_s
 const get_remove_news = callable<[{}], boolean>('Backend.get_remove_news');
 const get_extra_options_count = callable<[{}], number>('Backend.get_extra_options_count');
 const get_extra_option = callable<[{ opt_num: number }], string>('Backend.get_extra_option');
-const run_extra_option = callable<[{ opt_num: number, app_id: number }], boolean>('Backend.run_extra_option');
+const run_extra_option = callable<[{ opt_num: number, app_id: number, app_name: string }], boolean>('Backend.run_extra_option');
 
 const WaitForElement = async (sel: string, parent = document) =>
 	[...(await Millennium.findElement(parent, sel))][0];
@@ -88,7 +88,9 @@ async function OnPopupCreation(popup: any) {
                             const extraMenuItems = [];
                             for (let i = 0; i < extraOptionsCount; i++) {
                                 const itemName = await get_extra_option({ opt_num: i });
-                                extraMenuItems.push(<MenuItem onClick={async () => { await run_extra_option({ opt_num: i, app_id: uiStore.currentGameListSelection.nAppId }); }}> {itemName} </MenuItem>);
+                                const currentColl = collectionStore.GetCollection(uiStore.currentGameListSelection.strCollectionId);
+                                const currentApp = currentColl.allApps.find((x) => x.appid === uiStore.currentGameListSelection.nAppId);
+                                extraMenuItems.push(<MenuItem onClick={async () => { await run_extra_option({ opt_num: i, app_id: uiStore.currentGameListSelection.nAppId, app_name: currentApp.display_name }); }}> {itemName} </MenuItem>);
                             }
 
                             showContextMenu(

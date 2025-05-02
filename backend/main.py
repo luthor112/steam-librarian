@@ -4,6 +4,7 @@ logger = PluginUtils.Logger()
 import json
 import os
 import subprocess
+import urllib.parse
 import webbrowser
 
 def get_config(plugin_name):
@@ -58,14 +59,21 @@ class Backend:
             return ""
 
     @staticmethod
-    def run_extra_option(opt_num, app_id):
+    def run_extra_option(opt_num, app_id, app_name):
         extra_options_count = len(get_config("steam-librarian")["extra_options"])
         if opt_num > -1 and opt_num < extra_options_count:
             if "command" in get_config("steam-librarian")["extra_options"][opt_num]:
-                subprocess.Popen(get_config("steam-librarian")["extra_options"][opt_num]["command"].replace("<APPID>", str(app_id)))
+                app_id_str = str(app_id)
+                app_name_hyphen = app_name.replace(" ", "-")
+                app_name_under = app_name.replace(" ", "_")
+                subprocess.Popen(get_config("steam-librarian")["extra_options"][opt_num]["command"].replace("<APPID>", app_id_str).replace("<NAME>", f"\"{app_name}\"").replace("<NAME_HYPHEN>", app_name_hyphen).replace("<NAME_UNDER>", app_name_under))
                 return True
             elif "url" in get_config("steam-librarian")["extra_options"][opt_num]:
-                webbrowser.open(get_config("steam-librarian")["extra_options"][opt_num]["url"].replace("<APPID>", str(app_id)))
+                app_id_str = str(app_id)
+                app_name_enc = urllib.parse.quote(app_name)
+                app_name_hyphen_enc = urllib.parse.quote(app_name.replace(" ", "-"))
+                app_name_under_enc = urllib.parse.quote(app_name.replace(" ", "_"))
+                webbrowser.open(get_config("steam-librarian")["extra_options"][opt_num]["url"].replace("<APPID>", app_id_str).replace("<NAME>", app_name_enc).replace("<NAME_HYPHEN>", app_name_hyphen_enc).replace("<NAME_UNDER>", app_name_under_enc))
                 return True
         else:
             logger.log("run_extra_option() called with invalid index")

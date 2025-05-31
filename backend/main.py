@@ -7,52 +7,60 @@ import subprocess
 import urllib.parse
 import webbrowser
 
-def get_config(plugin_name):
+def get_config():
     with open(os.path.join(PLUGIN_BASE_DIR, "config.json"), "rt") as fp:
         return json.load(fp)
 
 class Backend:
     @staticmethod
     def get_autoselect_item():
-        autoselect_item = get_config("steam-librarian")["autoselect"]
+        autoselect_item = get_config()["autoselect"]
         logger.log(f"get_autoselect_item() -> {autoselect_item}")
         return autoselect_item
 
     @staticmethod
     def get_open_details():
-        open_details = get_config("steam-librarian")["open_details"]
+        open_details = get_config()["open_details"]
         logger.log(f"get_open_details() -> {open_details}")
         return open_details
 
     @staticmethod
     def get_library_size():
-        library_size = get_config("steam-librarian")["library_size"]
+        library_size = get_config()["library_size"]
         logger.log(f"get_library_size() -> {library_size}")
         return library_size
 
     @staticmethod
     def get_millennium_systray():
-        millennium_systray = get_config("steam-librarian")["millennium_systray"]
+        millennium_systray = get_config()["millennium_systray"]
         logger.log(f"get_millennium_systray() -> {millennium_systray}")
         return millennium_systray
 
     @staticmethod
+    def get_systray_text():
+        systray_text = "Millennium"
+        if "millennium_systray_text" in get_config():
+            systray_text = get_config()["millennium_systray_text"]
+        logger.log(f"get_systray_text() -> {systray_text}")
+        return systray_text
+
+    @staticmethod
     def get_remove_news():
-        remove_news = get_config("steam-librarian")["remove_news"]
+        remove_news = get_config()["remove_news"]
         logger.log(f"get_remove_news() -> {remove_news}")
         return remove_news
 
     @staticmethod
     def get_extra_options_count():
-        extra_options_count = len(get_config("steam-librarian")["extra_options"])
+        extra_options_count = len(get_config()["extra_options"])
         logger.log(f"get_extra_options_count() -> {extra_options_count}")
         return extra_options_count
 
     @staticmethod
     def get_extra_option(opt_num):
-        extra_options_count = len(get_config("steam-librarian")["extra_options"])
+        extra_options_count = len(get_config()["extra_options"])
         if opt_num > -1 and opt_num < extra_options_count:
-            extra_option_name = get_config("steam-librarian")["extra_options"][opt_num]["title"]
+            extra_option_name = get_config()["extra_options"][opt_num]["title"]
             return extra_option_name
         else:
             logger.log("get_extra_option() called with invalid index")
@@ -60,20 +68,20 @@ class Backend:
 
     @staticmethod
     def run_extra_option(opt_num, app_id, app_name):
-        extra_options_count = len(get_config("steam-librarian")["extra_options"])
+        extra_options_count = len(get_config()["extra_options"])
         if opt_num > -1 and opt_num < extra_options_count:
-            if "command" in get_config("steam-librarian")["extra_options"][opt_num]:
+            if "command" in get_config()["extra_options"][opt_num]:
                 app_id_str = str(app_id)
                 app_name_hyphen = app_name.replace(" ", "-")
                 app_name_under = app_name.replace(" ", "_")
-                subprocess.Popen(get_config("steam-librarian")["extra_options"][opt_num]["command"].replace("<APPID>", app_id_str).replace("<NAME>", f"\"{app_name}\"").replace("<NAME_HYPHEN>", app_name_hyphen).replace("<NAME_UNDER>", app_name_under))
+                subprocess.Popen(get_config()["extra_options"][opt_num]["command"].replace("<APPID>", app_id_str).replace("<NAME>", f"\"{app_name}\"").replace("<NAME_HYPHEN>", app_name_hyphen).replace("<NAME_UNDER>", app_name_under))
                 return True
-            elif "url" in get_config("steam-librarian")["extra_options"][opt_num]:
+            elif "url" in get_config()["extra_options"][opt_num]:
                 app_id_str = str(app_id)
                 app_name_enc = urllib.parse.quote(app_name)
                 app_name_hyphen_enc = urllib.parse.quote(app_name.replace(" ", "-"))
                 app_name_under_enc = urllib.parse.quote(app_name.replace(" ", "_"))
-                webbrowser.open(get_config("steam-librarian")["extra_options"][opt_num]["url"].replace("<APPID>", app_id_str).replace("<NAME>", app_name_enc).replace("<NAME_HYPHEN>", app_name_hyphen_enc).replace("<NAME_UNDER>", app_name_under_enc))
+                webbrowser.open(get_config()["extra_options"][opt_num]["url"].replace("<APPID>", app_id_str).replace("<NAME>", app_name_enc).replace("<NAME_HYPHEN>", app_name_hyphen_enc).replace("<NAME_UNDER>", app_name_under_enc))
                 return True
         else:
             logger.log("run_extra_option() called with invalid index")

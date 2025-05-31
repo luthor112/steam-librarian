@@ -1,10 +1,11 @@
-import { callable, findClassModule, findModule, Millennium, Menu, MenuItem, showContextMenu } from "@steambrew/client";
+import { callable, findClassModule, findModule, sleep, Millennium, Menu, MenuItem, showContextMenu } from "@steambrew/client";
 
 // Backend functions
 const get_autoselect_item = callable<[{}], string>('Backend.get_autoselect_item');
 const get_open_details = callable<[{}], boolean>('Backend.get_open_details');
 const get_library_size = callable<[{}], string>('Backend.get_library_size');
 const get_millennium_systray = callable<[{}], boolean>('Backend.get_millennium_systray');
+const get_systray_text = callable<[{}], string>('Backend.get_systray_text');
 const get_remove_news = callable<[{}], boolean>('Backend.get_remove_news');
 const get_extra_options_count = callable<[{}], number>('Backend.get_extra_options_count');
 const get_extra_option = callable<[{ opt_num: number }], string>('Backend.get_extra_option');
@@ -18,10 +19,6 @@ const WaitForElementTimeout = async (sel: string, parent = document, timeOut = 1
 
 const WaitForElementList = async (sel: string, parent = document) =>
 	[...(await Millennium.findElement(parent, sel))];
-
-async function sleep(msec) {
-    return new Promise(resolve => setTimeout(resolve, msec));
-}
 
 async function OnPopupCreation(popup: any) {
     if (popup.m_strName === "SP Desktop_uid0") {
@@ -108,12 +105,12 @@ async function OnPopupCreation(popup: any) {
     } else if (popup.m_strTitle === "Menu") {
         const systrayEnabled = await get_millennium_systray({});
         if (systrayEnabled) {
-            const menuItemList = await WaitForElementList(`div.contextMenuItem > div.${findModule(e => e.JumpListItemText).JumpListItemText}`, popup.m_popup.document);
-            const settingsItem = menuItemList.find(el => el.textContent === findModule(e => e.Settings).Settings).parentElement;
-            const millenniumItem = settingsItem.cloneNode(true);
+            const menuItemList = await WaitForElementList(`div#popup_target div.contextMenuItem > div.${findModule(e => e.JumpListItemText).JumpListItemText}`, popup.m_popup.document);
+            const exitItem = menuItemList[menuItemList.length - 1].parentNode;
+            const millenniumItem = exitItem.cloneNode(true);
 
-            millenniumItem.firstChild.textContent = "Millennium";
-            settingsItem.parentNode.insertBefore(millenniumItem, settingsItem.nextSibling);
+            millenniumItem.firstChild.textContent = await get_systray_text({});
+            exitItem.parentNode.insertBefore(millenniumItem, exitItem.previousSibling);
             millenniumItem.addEventListener("click", async () => {
                 window.open("steam://millennium", "_blank");
             });
@@ -133,6 +130,8 @@ export default async function PluginMain() {
     console.log("[steam-librarian] Result from get_library_size:", desiredLibrarySize);
     const systrayEnabled = await get_millennium_systray({});
     console.log("[steam-librarian] Result from get_millennium_systray:", systrayEnabled);
+    const systrayText = await get_systray_text({});
+    console.log("[steam-librarian] Result from get_systray_text:", systrayText);
     const removeNews = await get_remove_news({});
     console.log("[steam-librarian] Result from get_remove_news:", removeNews);
     const extraOptionsCount = await get_extra_options_count({});

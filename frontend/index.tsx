@@ -36,11 +36,8 @@ async function OnPopupCreation(popup: any) {
             if (MainWindowBrowserManager.m_lastLocation.pathname === "/library/home") {
                 const gameName = await get_autoselect_item({});
                 if (gameName !== "") {
-                    const gameListItemList = await WaitForElementList('div.ReactVirtualized__Grid__innerScrollContainer > div.Panel > div > div.Focusable', popup.m_popup.document);
-                    const gameItem = gameListItemList.find(el => el.textContent === gameName);
-                    if (gameItem) {
-                        gameItem.click();
-                    }
+                    const gameObj = appStore.allApps.find((x) => x.display_name === gameName);
+                    SteamUIStore.Navigate(`/library/app/${gameObj.appid}`);
                 }
 
                 const desiredLibrarySize = await get_library_size({});
@@ -112,7 +109,10 @@ async function OnPopupCreation(popup: any) {
             millenniumItem.firstChild.textContent = await get_systray_text({});
             exitItem.parentNode.insertBefore(millenniumItem, exitItem.previousSibling);
             millenniumItem.addEventListener("click", async () => {
-                window.open("steam://millennium", "_blank");
+                //window.open("steam://millennium", "_blank");
+                //SteamUIStore.Navigate("/millennium");
+                SteamUIStore.Navigate("/millennium/settings");
+                //window.open("steam://millennium/settings", "_blank");
             });
         }
     }
@@ -120,6 +120,7 @@ async function OnPopupCreation(popup: any) {
 
 export default async function PluginMain() {
     console.log("[steam-librarian] frontend startup");
+    await sleep(1000);  // Hopefully temporary workaround
 
     // Call the backend methods and log the configuration
     const gameName = await get_autoselect_item({});

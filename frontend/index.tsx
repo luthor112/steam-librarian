@@ -109,10 +109,7 @@ async function OnPopupCreation(popup: any) {
             millenniumItem.firstChild.textContent = await get_systray_text({});
             exitItem.parentNode.insertBefore(millenniumItem, exitItem.previousSibling);
             millenniumItem.addEventListener("click", async () => {
-                //window.open("steam://millennium", "_blank");
-                //SteamUIStore.Navigate("/millennium");
                 SteamUIStore.Navigate("/millennium/settings");
-                //window.open("steam://millennium/settings", "_blank");
             });
         }
     }

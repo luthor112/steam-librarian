@@ -17,6 +17,7 @@ A Millennium plugin that adds extra functionality for the Steam Library tab.
     - To open a webpage, add `{ "title": "TITLE_HERE", "url": "URL_HERE/<APPID>" }`
     - `<APPID>` will be replaced by the Steam AppID
     - `<NAME>`, `<NAME_HYPHEN>` and `<NAME_UNDER>` will be replaced by the game name
+- To mark Shortcuts (non-Steam games) as not installed, set `mark_shortcuts_offline` to `true`
 
 Big thanks to canitakemasoulbackpls!
 
@@ -27,4 +28,4 @@ Big thanks to canitakemasoulbackpls!
 - [Millennium](https://steambrew.app/)
 
 ## Known issues:
-- The old issues should now be fixed!
+- Marking Shortcuts as not installed is a bit buggy

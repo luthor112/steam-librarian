@@ -57,6 +57,14 @@ class Backend:
         return extra_options_count
 
     @staticmethod
+    def get_mark_shortcuts_offline():
+        mark_shortcuts_offline = False
+        if "mark_shortcuts_offline" in get_config():
+            mark_shortcuts_offline = get_config()["mark_shortcuts_offline"]
+        logger.log(f"get_mark_shortcuts_offline() -> {mark_shortcuts_offline}")
+        return mark_shortcuts_offline
+
+    @staticmethod
     def get_extra_option(opt_num):
         extra_options_count = len(get_config()["extra_options"])
         if opt_num > -1 and opt_num < extra_options_count:

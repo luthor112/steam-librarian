@@ -8,6 +8,7 @@ const get_millennium_systray = callable<[{}], boolean>('Backend.get_millennium_s
 const get_systray_text = callable<[{}], string>('Backend.get_systray_text');
 const get_remove_news = callable<[{}], boolean>('Backend.get_remove_news');
 const get_extra_options_count = callable<[{}], number>('Backend.get_extra_options_count');
+const get_mark_shortcuts_offline = callable<[{}], boolean>('Backend.get_mark_shortcuts_offline');
 const get_extra_option = callable<[{ opt_num: number }], string>('Backend.get_extra_option');
 const run_extra_option = callable<[{ opt_num: number, app_id: number, app_name: string }], boolean>('Backend.run_extra_option');
 
@@ -97,6 +98,14 @@ async function OnPopupCreation(popup: any) {
                         });
                     }
                 }
+
+                const markShortcutsOffline = await get_mark_shortcuts_offline({});
+                if (markShortcutsOffline) {
+                    const currentApp = appStore.allApps.find((x) => x.appid === uiStore.currentGameListSelection.nAppId);
+                    if (currentApp.BIsShortcut()) {
+                        currentApp.per_client_data[0].installed = false;
+                    }
+                }
             }
         });
     } else if (popup.m_strTitle === "Menu") {
@@ -134,6 +143,8 @@ export default async function PluginMain() {
     console.log("[steam-librarian] Result from get_remove_news:", removeNews);
     const extraOptionsCount = await get_extra_options_count({});
     console.log("[steam-librarian] Result from get_extra_options_count:", extraOptionsCount);
+    const markShortcutsOffline = await get_mark_shortcuts_offline({});
+    console.log("[steam-librarian] Result from get_mark_shortcuts_offline:", markShortcutsOffline);
 
     const doc = g_PopupManager.GetExistingPopup("SP Desktop_uid0");
 	if (doc) {
@@ -147,4 +158,12 @@ export default async function PluginMain() {
     });
 
 	g_PopupManager.AddPopupCreatedCallback(OnPopupCreation);
+
+    if (markShortcutsOffline) {
+        for (const currentApp of appStore.allApps) {
+            if (currentApp.BIsShortcut()) {
+                currentApp.per_client_data[0].installed = false;
+            }
+        }
+    }
 }

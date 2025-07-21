@@ -6,5 +6,6 @@
     "millennium_systray_text": "Millennium",
     "remove_news": false,
     "extra_options": [
-    ]
+    ],
+    "mark_shortcuts_offline": false
 }

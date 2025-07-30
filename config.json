@@ -7,5 +7,7 @@
     "remove_news": false,
     "extra_options": [
     ],
-    "mark_shortcuts_offline": false
+    "mark_shortcuts_offline": false,
+    "restart_menu": false,
+    "restart_menu_text": "Restart"
 }

@@ -65,6 +65,22 @@ class Backend:
         return mark_shortcuts_offline
 
     @staticmethod
+    def get_restart_menu():
+        restart_menu = False
+        if "restart_menu" in get_config():
+            restart_menu = get_config()["restart_menu"]
+        logger.log(f"get_restart_menu() -> {restart_menu}")
+        return restart_menu
+
+    @staticmethod
+    def get_restart_text():
+        restart_menu_text = "Restart"
+        if "restart_menu_text" in get_config():
+            restart_menu_text = get_config()["restart_menu_text"]
+        logger.log(f"get_restart_text() -> {restart_menu_text}")
+        return restart_menu_text
+
+    @staticmethod
     def get_extra_option(opt_num):
         extra_options_count = len(get_config()["extra_options"])
         if opt_num > -1 and opt_num < extra_options_count:

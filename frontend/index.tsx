@@ -9,7 +9,9 @@ const get_systray_text = callable<[{}], string>('Backend.get_systray_text');
 const get_remove_news = callable<[{}], boolean>('Backend.get_remove_news');
 const get_extra_options_count = callable<[{}], number>('Backend.get_extra_options_count');
 const get_mark_shortcuts_offline = callable<[{}], boolean>('Backend.get_mark_shortcuts_offline');
+const get_restart_menu = callable<[{}], boolean>('Backend.get_restart_menu');
 const get_extra_option = callable<[{ opt_num: number }], string>('Backend.get_extra_option');
+const get_restart_text = callable<[{}], string>('Backend.get_restart_text');
 const run_extra_option = callable<[{ opt_num: number, app_id: number, app_name: string }], boolean>('Backend.run_extra_option');
 
 const WaitForElement = async (sel: string, parent = document) =>
@@ -121,6 +123,20 @@ async function OnPopupCreation(popup: any) {
                 SteamUIStore.Navigate("/millennium/settings");
             });
         }
+    } else if (popup.m_strTitle === "Steam Root Menu") {
+        const restartMenuEnabled = await get_restart_menu({});
+        if (restartMenuEnabled) {
+            console.log("[steam-librarian] Steam Root Menu reached!");
+            const menuItemList = await WaitForElementList("div#popup_target div[role='menuitem']", popup.m_popup.document);
+            const exitItem = menuItemList[menuItemList.length - 1];
+            const restartItem = exitItem.cloneNode(true);
+            
+            restartItem.textContent = await get_restart_text({});
+            exitItem.parentNode.insertBefore(restartItem, exitItem);
+            restartItem.addEventListener("click", async () => {
+                SteamClient.User.StartRestart(true);
+            });
+        }
     }
 }
 
@@ -152,6 +168,8 @@ export default async function PluginMain() {
     console.log("[steam-librarian] Result from get_extra_options_count:", extraOptionsCount);
     const markShortcutsOffline = await get_mark_shortcuts_offline({});
     console.log("[steam-librarian] Result from get_mark_shortcuts_offline:", markShortcutsOffline);
+    const restartMenuEnabled = await get_restart_menu({});
+    console.log("[steam-librarian] Result from get_restart_menu:", restartMenuEnabled);
 
     const doc = g_PopupManager.GetExistingPopup("SP Desktop_uid0");
 	if (doc) {
@@ -159,7 +177,7 @@ export default async function PluginMain() {
 	}
 
     g_PopupManager.m_mapPopups.data_.forEach(popup => {
-        if (popup.value_.m_strTitle === "Menu") {
+        if (popup.value_.m_strTitle === "Menu" || popup.value_.m_strTitle === "Steam Root Menu") {
             OnPopupCreation(popup.value_);
         }
     });

@@ -18,6 +18,9 @@ A Millennium plugin that adds extra functionality for the Steam Library tab.
     - `<APPID>` will be replaced by the Steam AppID
     - `<NAME>`, `<NAME_HYPHEN>` and `<NAME_UNDER>` will be replaced by the game name
 - To mark Shortcuts (non-Steam games) as not installed, set `mark_shortcuts_offline` to `true`
+- To add a Restart menu item to the Steam menu, set `restart_menu` to `true`
+    - To customize the text of the menu item, set `restart_menu_text` to your desired value
+    - Steam has to be restarted for this configuration to take effect!
 
 Big thanks to canitakemasoulbackpls!
 

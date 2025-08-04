@@ -142,12 +142,7 @@ async function OnPopupCreation(popup: any) {
 
 export default async function PluginMain() {
     console.log("[steam-librarian] frontend startup");
-    while (
-        typeof g_PopupManager === 'undefined' ||
-        typeof MainWindowBrowserManager === 'undefined'
-    ) {
-        await sleep(100);
-    }
+    await App.WaitForServicesInitialized();
 
     // Call the backend methods and log the configuration
     const gameName = await get_autoselect_item({});

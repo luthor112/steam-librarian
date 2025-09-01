@@ -5,13 +5,13 @@ const get_autoselect_item = callable<[{}], string>('Backend.get_autoselect_item'
 const get_open_details = callable<[{}], boolean>('Backend.get_open_details');
 const get_library_size = callable<[{}], string>('Backend.get_library_size');
 const get_millennium_systray = callable<[{}], boolean>('Backend.get_millennium_systray');
-const get_systray_text = callable<[{}], string>('Backend.get_systray_text');
+const get_systray_text = callable<[{ transmit_encoded: boolean }], string>('Backend.get_systray_text');
 const get_remove_news = callable<[{}], boolean>('Backend.get_remove_news');
 const get_extra_options_count = callable<[{}], number>('Backend.get_extra_options_count');
 const get_mark_shortcuts_offline = callable<[{}], boolean>('Backend.get_mark_shortcuts_offline');
 const get_restart_menu = callable<[{}], boolean>('Backend.get_restart_menu');
 const get_extra_option = callable<[{ opt_num: number }], string>('Backend.get_extra_option');
-const get_restart_text = callable<[{}], string>('Backend.get_restart_text');
+const get_restart_text = callable<[{ transmit_encoded: boolean }], string>('Backend.get_restart_text');
 const run_extra_option = callable<[{ opt_num: number, app_id: number, app_name: string }], boolean>('Backend.run_extra_option');
 
 const WaitForElement = async (sel: string, parent = document) =>
@@ -117,7 +117,8 @@ async function OnPopupCreation(popup: any) {
             const exitItem = menuItemList[menuItemList.length - 1].parentNode;
             const millenniumItem = exitItem.cloneNode(true);
 
-            millenniumItem.firstChild.textContent = await get_systray_text({});
+            const systrayTextEnc = await get_systray_text({ transmit_encoded: true });
+            millenniumItem.firstChild.textContent = decodeURIComponent(escape(window.atob(systrayTextEnc)));
             exitItem.parentNode.insertBefore(millenniumItem, exitItem.previousSibling);
             millenniumItem.addEventListener("click", async () => {
                 SteamUIStore.Navigate("/millennium/settings");
@@ -130,8 +131,9 @@ async function OnPopupCreation(popup: any) {
             const menuItemList = await WaitForElementList("div#popup_target div[role='menuitem']", popup.m_popup.document);
             const exitItem = menuItemList[menuItemList.length - 1];
             const restartItem = exitItem.cloneNode(true);
-            
-            restartItem.textContent = await get_restart_text({});
+
+            const restartMenuTextEnc = await get_restart_text({ transmit_encoded: true });
+            restartItem.textContent = decodeURIComponent(escape(window.atob(restartMenuTextEnc)));
             exitItem.parentNode.insertBefore(restartItem, exitItem);
             restartItem.addEventListener("click", async () => {
                 SteamClient.User.StartRestart(true);
@@ -153,8 +155,6 @@ export default async function PluginMain() {
     console.log("[steam-librarian] Result from get_library_size:", desiredLibrarySize);
     const systrayEnabled = await get_millennium_systray({});
     console.log("[steam-librarian] Result from get_millennium_systray:", systrayEnabled);
-    const systrayText = await get_systray_text({});
-    console.log("[steam-librarian] Result from get_systray_text:", systrayText);
     const removeNews = await get_remove_news({});
     console.log("[steam-librarian] Result from get_remove_news:", removeNews);
     const extraOptionsCount = await get_extra_options_count({});

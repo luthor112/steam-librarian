@@ -1,6 +1,7 @@
 import Millennium, PluginUtils # type: ignore
 logger = PluginUtils.Logger()
 
+import base64
 import json
 import os
 import subprocess
@@ -8,7 +9,7 @@ import urllib.parse
 import webbrowser
 
 def get_config():
-    with open(os.path.join(PLUGIN_BASE_DIR, "config.json"), "rt") as fp:
+    with open(os.path.join(PLUGIN_BASE_DIR, "config.json"), "rt", encoding="utf-8") as fp:
         return json.load(fp)
 
 class Backend:
@@ -37,10 +38,12 @@ class Backend:
         return millennium_systray
 
     @staticmethod
-    def get_systray_text():
+    def get_systray_text(transmit_encoded):
         systray_text = "Millennium"
         if "millennium_systray_text" in get_config():
             systray_text = get_config()["millennium_systray_text"]
+        if transmit_encoded:
+            systray_text = base64.standard_b64encode(systray_text.encode()).decode()
         logger.log(f"get_systray_text() -> {systray_text}")
         return systray_text
 
@@ -73,10 +76,12 @@ class Backend:
         return restart_menu
 
     @staticmethod
-    def get_restart_text():
+    def get_restart_text(transmit_encoded):
         restart_menu_text = "Restart"
         if "restart_menu_text" in get_config():
             restart_menu_text = get_config()["restart_menu_text"]
+        if transmit_encoded:
+            restart_menu_text = base64.standard_b64encode(restart_menu_text.encode()).decode()
         logger.log(f"get_restart_text() -> {restart_menu_text}")
         return restart_menu_text
 

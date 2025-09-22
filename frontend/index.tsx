@@ -146,6 +146,13 @@ export default async function PluginMain() {
     console.log("[steam-librarian] frontend startup");
     await App.WaitForServicesInitialized();
 
+    while (
+        typeof g_PopupManager === 'undefined' ||
+        typeof MainWindowBrowserManager === 'undefined'
+    ) {
+        await sleep(100);
+    }
+
     // Call the backend methods and log the configuration
     const gameName = await get_autoselect_item({});
     console.log("[steam-librarian] Result from get_autoselect_item:", gameName);

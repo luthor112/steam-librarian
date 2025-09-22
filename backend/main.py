@@ -4,12 +4,18 @@ logger = PluginUtils.Logger()
 import base64
 import json
 import os
+import shutil
 import subprocess
 import urllib.parse
 import webbrowser
 
 def get_config():
-    with open(os.path.join(PLUGIN_BASE_DIR, "config.json"), "rt", encoding="utf-8") as fp:
+    config_fname = os.path.join(PLUGIN_BASE_DIR, "config.json")
+    if not os.path.exists(config_fname):
+        defaults_fname = os.path.join(PLUGIN_BASE_DIR, "defaults.json")
+        shutil.copyfile(defaults_fname, config_fname)
+
+    with open(config_fname, "rt", encoding="utf-8") as fp:
         return json.load(fp)
 
 class Backend:

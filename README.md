@@ -18,6 +18,7 @@ A Millennium plugin that adds extra functionality for the Steam Library tab.
     - `<APPID>` will be replaced by the Steam AppID
     - `<NAME>`, `<NAME_HYPHEN>` and `<NAME_UNDER>` will be replaced by the game name
 - To mark Shortcuts (non-Steam games) as not installed, set `mark_shortcuts_offline` to `true`
+- To makr SHortcuts (non-Steam games) with missing binaries as not installed, set `check_shortcuts_exist` to `true`
 - To add a Restart menu item to the Steam menu, set `restart_menu` to `true`
     - To customize the text of the menu item, set `restart_menu_text` to your desired value
     - Steam has to be restarted for this configuration to take effect!
@@ -31,4 +32,4 @@ Big thanks to canitakemasoulbackpls!
 - [Millennium](https://steambrew.app/)
 
 ## Known issues:
-- Marking Shortcuts as not installed is a bit buggy
+- Marking Shortcuts as not installed is a buggy

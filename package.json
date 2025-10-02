@@ -12,7 +12,7 @@
   },
   "type": "module",
   "name": "steam-librarian",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Extra functionality for the Steam Library tab",
   "main": "./frontend/index.jsx",
   "author": "luthor112",
@@ -20,7 +20,7 @@
   "dependencies": {
     "@steambrew/api": "^5.5.14",
     "@steambrew/client": "^5.5.14",
-    "@steambrew/ttc": "^2.7.3",
+    "@steambrew/ttc": "^2.7.5",
     "@steambrew/webkit": "^5.5.14",
     "preact": "^10.25.0"
   }

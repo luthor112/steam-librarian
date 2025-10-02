@@ -7,8 +7,11 @@ const get_library_size = callable<[{}], string>('Backend.get_library_size');
 const get_millennium_systray = callable<[{}], boolean>('Backend.get_millennium_systray');
 const get_systray_text = callable<[{ transmit_encoded: boolean }], string>('Backend.get_systray_text');
 const get_remove_news = callable<[{}], boolean>('Backend.get_remove_news');
+const get_remove_review_ask = callable<[{}], boolean>('Backend.get_remove_review_ask');
 const get_extra_options_count = callable<[{}], number>('Backend.get_extra_options_count');
 const get_mark_shortcuts_offline = callable<[{}], boolean>('Backend.get_mark_shortcuts_offline');
+const get_check_shortcuts_exist = callable<[{}], boolean>('Backend.get_check_shortcuts_exist');
+const fs_file_exists = callable<[{ file_path: string }], boolean>('Backend.fs_file_exists');
 const get_restart_menu = callable<[{}], boolean>('Backend.get_restart_menu');
 const get_extra_option = callable<[{ opt_num: number }], string>('Backend.get_extra_option');
 const get_restart_text = callable<[{ transmit_encoded: boolean }], string>('Backend.get_restart_text');
@@ -102,10 +105,21 @@ async function OnPopupCreation(popup: any) {
                 }
 
                 const markShortcutsOffline = await get_mark_shortcuts_offline({});
+                const checkShortcutsExist = await get_check_shortcuts_exist({});
                 if (markShortcutsOffline) {
                     const currentApp = appStore.allApps.find((x) => x.appid === uiStore.currentGameListSelection.nAppId);
                     if (currentApp.BIsShortcut()) {
                         currentApp.per_client_data[0].installed = false;
+                    }
+                } else if (checkShortcutsExist) {
+                    const currentApp = appStore.allApps.find((x) => x.appid === uiStore.currentGameListSelection.nAppId);
+                    if (currentApp.BIsShortcut()) {
+                        await appDetailsStore.RequestAppDetails(currentApp.appid);
+                        const binaryPath = appDetailsStore.GetAppDetails(currentApp.appid).strShortcutExe;
+                        const binaryExists = await fs_file_exists({ file_path: binaryPath });
+                        if (!binaryExists) {
+                            currentApp.per_client_data[0].installed = false;
+                        }
                     }
                 }
             }
@@ -164,10 +178,14 @@ export default async function PluginMain() {
     console.log("[steam-librarian] Result from get_millennium_systray:", systrayEnabled);
     const removeNews = await get_remove_news({});
     console.log("[steam-librarian] Result from get_remove_news:", removeNews);
+    const removeReviewAsk = await get_remove_review_ask({});
+    console.log("[steam-librarian] Result from get_remove_review_ask:", removeReviewAsk);
     const extraOptionsCount = await get_extra_options_count({});
     console.log("[steam-librarian] Result from get_extra_options_count:", extraOptionsCount);
     const markShortcutsOffline = await get_mark_shortcuts_offline({});
     console.log("[steam-librarian] Result from get_mark_shortcuts_offline:", markShortcutsOffline);
+    const checkShortcutsExist = await get_check_shortcuts_exist({});
+    console.log("[steam-librarian] Result from get_check_shortcuts_exist:", checkShortcutsExist);
     const restartMenuEnabled = await get_restart_menu({});
     console.log("[steam-librarian] Result from get_restart_menu:", restartMenuEnabled);
 
@@ -188,6 +206,17 @@ export default async function PluginMain() {
         for (const currentApp of appStore.allApps) {
             if (currentApp.BIsShortcut()) {
                 currentApp.per_client_data[0].installed = false;
+            }
+        }
+    } else if (checkShortcutsExist) {
+        for (const currentApp of appStore.allApps) {
+            if (currentApp.BIsShortcut()) {
+                await appDetailsStore.RequestAppDetails(currentApp.appid);
+                const binaryPath = appDetailsStore.GetAppDetails(currentApp.appid).strShortcutExe;
+                const binaryExists = await fs_file_exists({ file_path: binaryPath });
+                if (!binaryExists) {
+                    currentApp.per_client_data[0].installed = false;
+                }
             }
         }
     }

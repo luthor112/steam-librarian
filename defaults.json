@@ -5,9 +5,11 @@
     "millennium_systray": false,
     "millennium_systray_text": "Millennium",
     "remove_news": false,
+    "remove_review_ask": false,
     "extra_options": [
     ],
     "mark_shortcuts_offline": false,
+    "check_shortcuts_exist": false,
     "restart_menu": false,
     "restart_menu_text": "Restart"
 }

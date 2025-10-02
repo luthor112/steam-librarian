@@ -60,6 +60,14 @@ class Backend:
         return remove_news
 
     @staticmethod
+    def get_remove_review_ask():
+        remove_review_ask = False
+        if "remove_review_ask" in get_config():
+            remove_review_ask = get_config()["remove_review_ask"]
+        logger.log(f"get_remove_review_ask() -> {remove_review_ask}")
+        return remove_review_ask
+
+    @staticmethod
     def get_extra_options_count():
         extra_options_count = len(get_config()["extra_options"])
         logger.log(f"get_extra_options_count() -> {extra_options_count}")
@@ -72,6 +80,20 @@ class Backend:
             mark_shortcuts_offline = get_config()["mark_shortcuts_offline"]
         logger.log(f"get_mark_shortcuts_offline() -> {mark_shortcuts_offline}")
         return mark_shortcuts_offline
+
+    @staticmethod
+    def get_check_shortcuts_exist():
+        check_shortcuts_exist = False
+        if "check_shortcuts_exist" in get_config():
+            check_shortcuts_exist = get_config()["check_shortcuts_exist"]
+        logger.log(f"get_check_shortcuts_exist() -> {check_shortcuts_exist}")
+        return check_shortcuts_exist
+
+    @staticmethod
+    def fs_file_exists(file_path):
+        file_exists = os.path.exists(file_path.strip('\"'))
+        logger.log(f"fs_file_exists() -> {file_exists} for {file_path}")
+        return file_exists
 
     @staticmethod
     def get_restart_menu():

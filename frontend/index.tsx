@@ -62,6 +62,27 @@ async function OnPopupCreation(popup: any) {
                         }
                     } catch {}
                 }
+
+                const markShortcutsOffline = await get_mark_shortcuts_offline({});
+                const checkShortcutsExist = await get_check_shortcuts_exist({});
+                if (markShortcutsOffline) {
+                    for (const currentApp of appStore.allApps) {
+                        if (currentApp.BIsShortcut()) {
+                            currentApp.per_client_data[0].installed = false;
+                        }
+                    }
+                } else if (checkShortcutsExist) {
+                    for (const currentApp of appStore.allApps) {
+                        if (currentApp.BIsShortcut()) {
+                            await appDetailsStore.RequestAppDetails(currentApp.appid);
+                            const binaryPath = appDetailsStore.GetAppDetails(currentApp.appid).strShortcutExe;
+                            const binaryExists = await fs_file_exists({ file_path: binaryPath });
+                            if (!binaryExists) {
+                                currentApp.per_client_data[0].installed = false;
+                            }
+                        }
+                    }
+                }
             } else if (MainWindowBrowserManager.m_lastLocation.pathname.startsWith("/library/app/")) {
                 const autoOpenDetails = await get_open_details({});
                 if (autoOpenDetails) {

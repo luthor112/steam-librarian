@@ -30,6 +30,3 @@ Big thanks to canitakemasoulbackpls!
 
 ## Prerequisites
 - [Millennium](https://steambrew.app/)
-
-## Known issues:
-- Marking Shortcuts as not installed is a buggy

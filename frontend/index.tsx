@@ -125,6 +125,16 @@ async function OnPopupCreation(popup: any) {
                     }
                 }
 
+                const removeReviewAsk = await get_remove_review_ask({});
+                if (removeReviewAsk) {
+                    try {
+                        const reviewAskPane = await WaitForElementTimeout(`div.${findModule(e => e.ReviewContainer).ReviewContainer}`, popup.m_popup.document);
+                        if (reviewAskPane) {
+                            reviewAskPane.remove();
+                        }
+                    } catch {}
+                }
+
                 const markShortcutsOffline = await get_mark_shortcuts_offline({});
                 const checkShortcutsExist = await get_check_shortcuts_exist({});
                 if (markShortcutsOffline) {

@@ -12,6 +12,7 @@ A Millennium plugin that adds extra functionality for the Steam Library tab.
     - To customize the text of the menu item, set `millennium_systray_text` to your desired value
     - Steam has to be restarted for this configuration to take effect!
 - To remove the What's New section of the Library, set `remove_news` to `true`
+- To remove the "Would you recommend this game to other players?" section of app pages, set `remove_review_ask` to `true`
 - To add items to the extra Settings menu of every game, fill `extra_options` with a list of objects:
     - To run a command, add `{ "title": "TITLE_HERE", "command": "COMMAND_HERE <APPID>" }`
     - To open a webpage, add `{ "title": "TITLE_HERE", "url": "URL_HERE/<APPID>" }`

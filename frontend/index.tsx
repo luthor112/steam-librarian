@@ -147,7 +147,11 @@ async function OnPopupCreation(popup: any) {
                     try {
                         const reviewAskPane = await WaitForElementTimeout(`div.${findModule(e => e.ReviewContainer).ReviewContainer}`, popup.m_popup.document);
                         if (reviewAskPane) {
+                            const askParent = reviewAskPane.parentElement;
                             reviewAskPane.remove();
+                            if (askParent.children.length === 0) {
+                                askParent.remove();
+                            }
                         }
                     } catch {}
                 }

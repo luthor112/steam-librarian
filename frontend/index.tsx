@@ -16,6 +16,7 @@ const get_restart_menu = callable<[{}], boolean>('Backend.get_restart_menu');
 const get_extra_option = callable<[{ opt_num: number }], string>('Backend.get_extra_option');
 const get_restart_text = callable<[{ transmit_encoded: boolean }], string>('Backend.get_restart_text');
 const run_extra_option = callable<[{ opt_num: number, app_id: number, app_name: string }], boolean>('Backend.run_extra_option');
+const get_scroll_to_app = callable<[{}], boolean>('Backend.get_scroll_to_app');
 
 const WaitForElement = async (sel: string, parent = document) =>
 	[...(await Millennium.findElement(parent, sel))][0];
@@ -25,6 +26,9 @@ const WaitForElementTimeout = async (sel: string, parent = document, timeOut = 1
 
 const WaitForElementList = async (sel: string, parent = document) =>
 	[...(await Millennium.findElement(parent, sel))];
+
+var scrollToColl = undefined;
+var scrollToApp = undefined;
 
 async function OnPopupCreation(popup: any) {
     if (popup.m_strName === "SP Desktop_uid0") {
@@ -96,7 +100,8 @@ async function OnPopupCreation(popup: any) {
                 }
 
                 const extraOptionsCount = await get_extra_options_count({});
-                if (extraOptionsCount > 0) {
+                const scrollToAppEnabled = await get_scroll_to_app({});
+                if (extraOptionsCount > 0 || scrollToAppEnabled) {
                     const gameSettingsButton = await WaitForElement(`div.${findModule(e => e.InPage).InPage} div.${findModule(e => e.AppButtonsContainer).AppButtonsContainer} > div.${findModule(e => e.MenuButtonContainer).MenuButtonContainer}:not([role="button"])`, popup.m_popup.document);
                     const oldExtraSettingsButton = gameSettingsButton.parentNode.querySelector('div.extra-settings-button');
                     if (!oldExtraSettingsButton) {
@@ -107,6 +112,18 @@ async function OnPopupCreation(popup: any) {
 
                         extraSettingsButton.addEventListener("click", async () => {
                             const extraMenuItems = [];
+                            
+                            if (scrollToAppEnabled) {
+                                const currentCollID = uiStore.currentGameListSelection.strCollectionId;
+                                const currentAppID = uiStore.currentGameListSelection.nAppId;
+                                extraMenuItems.push(<MenuItem onClick={async () => {
+                                    scrollToColl = currentCollID;
+                                    scrollToApp = currentAppID;
+                                    console.log("[steam-librarian] Switch to:", currentCollID);
+                                    SteamUIStore.Navigate(`/library/collection/${currentCollID}`);
+                                }}> Scroll to App </MenuItem>);
+                            }
+                            
                             for (let i = 0; i < extraOptionsCount; i++) {
                                 const itemName = await get_extra_option({ opt_num: i });
                                 const currentColl = collectionStore.GetCollection(uiStore.currentGameListSelection.strCollectionId);
@@ -150,6 +167,25 @@ async function OnPopupCreation(popup: any) {
                         const binaryExists = await fs_file_exists({ file_path: binaryPath });
                         if (!binaryExists) {
                             currentApp.per_client_data[0].installed = false;
+                        }
+                    }
+                }
+            } else if (MainWindowBrowserManager.m_lastLocation.pathname.startsWith("/library/collection/")) {
+                if (scrollToColl && MainWindowBrowserManager.m_lastLocation.pathname === `/library/collection/${scrollToColl}`) {
+                    console.log("[steam-librarian] Switched to wanted collection:", scrollToColl);
+                    const appGrid = await WaitForElement(`div.${findModule(e => e.CSSGrid).CSSGrid}[role='grid']`, popup.m_popup.document);
+                    while (true) {
+                        let wantedAppElement = appGrid.querySelector(`img[src^='/assets/${scrollToApp}/'`);
+                        if (wantedAppElement) {
+                            console.log("[steam-librarian] Wanted app image found, scrolling...");
+                            wantedAppElement.scrollIntoView({ block: "center" });
+                            scrollToColl = undefined;
+                            scrollToApp = undefined;
+                            break;
+                        } else {
+                            console.log("[steam-librarian] App image not found, scrolling to current bottom...");
+                            appGrid.children[appGrid.children.length - 1].querySelector('img').scrollIntoView({ block: "end" });
+                            await sleep(100);
                         }
                     }
                 }
@@ -219,6 +255,8 @@ export default async function PluginMain() {
     console.log("[steam-librarian] Result from get_check_shortcuts_exist:", checkShortcutsExist);
     const restartMenuEnabled = await get_restart_menu({});
     console.log("[steam-librarian] Result from get_restart_menu:", restartMenuEnabled);
+    const scrollToAppEnabled = await get_scroll_to_app({});
+    console.log("[steam-librarian] Result from get_scroll_to_app:", scrollToAppEnabled);
 
     const doc = g_PopupManager.GetExistingPopup("SP Desktop_uid0");
 	if (doc) {

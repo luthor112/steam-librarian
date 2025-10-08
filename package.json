@@ -12,7 +12,7 @@
   },
   "type": "module",
   "name": "steam-librarian",
-  "version": "1.0.8",
+  "version": "1.0.10",
   "description": "Extra functionality for the Steam Library tab",
   "main": "./frontend/index.jsx",
   "author": "luthor112",

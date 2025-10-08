@@ -144,6 +144,14 @@ class Backend:
             logger.log("run_extra_option() called with invalid index")
             return False
 
+    @staticmethod
+    def get_scroll_to_app():
+        scroll_to_app = False
+        if "scroll_to_app" in get_config():
+            scroll_to_app = get_config()["scroll_to_app"]
+        logger.log(f"get_scroll_to_app() -> {scroll_to_app}")
+        return scroll_to_app
+
 class Plugin:
     def _front_end_loaded(self):
         logger.log("Frontend loaded")

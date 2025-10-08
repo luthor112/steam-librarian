@@ -23,6 +23,7 @@ A Millennium plugin that adds extra functionality for the Steam Library tab.
 - To add a Restart menu item to the Steam menu, set `restart_menu` to `true`
     - To customize the text of the menu item, set `restart_menu_text` to your desired value
     - Steam has to be restarted for this configuration to take effect!
+- To add a "Scroll to App" item to the extra Settings menu of every game, set `scroll_to_app` to `scroll_to_app`
 
 Big thanks to canitakemasoulbackpls!
 

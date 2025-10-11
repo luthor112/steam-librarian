@@ -160,6 +160,14 @@ class Backend:
         logger.log(f"get_app_downgrader() -> {app_downgrader}")
         return app_downgrader
 
+    @staticmethod
+    def copy_files(source_dir, destination_dir):
+        try:
+            shutil.copytree(source_dir, destination_dir, dirs_exist_ok=True)
+            return True
+        except:
+            return False
+
 class Plugin:
     def _front_end_loaded(self):
         logger.log("Frontend loaded")

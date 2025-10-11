@@ -24,6 +24,15 @@ A Millennium plugin that adds extra functionality for the Steam Library tab.
     - To customize the text of the menu item, set `restart_menu_text` to your desired value
     - Steam has to be restarted for this configuration to take effect!
 - To add a "Scroll to App" item to the extra Settings menu of every game, set `scroll_to_app` to `true`
+- To up/downgrade an app using a selected manifest:
+    - Set `app_downgrader` to `true`
+    - Open the Properties window of an app
+    - Under Updates, click the `Custom Up/Downgrade` button
+    - Click the wanted Depot ID
+    - Click the wanted Manifest ID
+    - Wait for the depot to be downloaded and the app patched
+    - The app is also set to only update on launch
+    - When all is done, the button will display `Done!`
 
 Big thanks to canitakemasoulbackpls!
 

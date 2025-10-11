@@ -19,6 +19,7 @@ const get_restart_text = callable<[{ transmit_encoded: boolean }], string>('Back
 const run_extra_option = callable<[{ opt_num: number, app_id: number, app_name: string }], boolean>('Backend.run_extra_option');
 const get_scroll_to_app = callable<[{}], boolean>('Backend.get_scroll_to_app');
 const get_app_downgrader = callable<[{}], boolean>('Backend.get_app_downgrader');
+const copy_files = callable<[{ source_dir: string, destination_dir: string }], boolean>('Backend.copy_files');
 
 const WaitForElement = async (sel: string, parent = document) =>
 	[...(await Millennium.findElement(parent, sel))][0];
@@ -278,10 +279,12 @@ async function OnPopupCreation(popup: any) {
                                     return;
                                 }
                                 const depotDLDir = downloadCompletedRegex.exec(downloadCompletedMessage)[1];
-                                console.log("[steam-librarian] depotDLDir:", depotDLDir);
+                                console.log("[steam-librarian] Download path:", depotDLDir);
                                 
                                 downgradeButton.firstChild.textContent = "Updating app...";
-                                // TODO: Copy files
+                                await appDetailsStore.RequestAppDetails(parseInt(currentAppID));
+                                const appPath = appDetailsStore.GetAppDetails(parseInt(currentAppID)).strInstallFolder;
+                                await copy_files({ source_dir: depotDLDir, destination_dir: appPath });
 
                                 downgradeButton.firstChild.textContent = "Done!";
                             });

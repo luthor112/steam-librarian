@@ -12,5 +12,6 @@
     "check_shortcuts_exist": false,
     "restart_menu": false,
     "restart_menu_text": "Restart",
-    "scroll_to_app": false
+    "scroll_to_app": false,
+    "app_downgrader": false
 }

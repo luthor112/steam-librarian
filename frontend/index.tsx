@@ -1,4 +1,5 @@
-import { callable, findClassModule, findModule, sleep, Millennium, Menu, MenuItem, showContextMenu } from "@steambrew/client";
+import { callable, findClassModule, findModule, sleep, Millennium, Menu, MenuItem, DialogButton, showContextMenu } from "@steambrew/client";
+import { render } from "react-dom";
 
 // Backend functions
 const get_autoselect_item = callable<[{}], string>('Backend.get_autoselect_item');
@@ -17,6 +18,7 @@ const get_extra_option = callable<[{ opt_num: number }], string>('Backend.get_ex
 const get_restart_text = callable<[{ transmit_encoded: boolean }], string>('Backend.get_restart_text');
 const run_extra_option = callable<[{ opt_num: number, app_id: number, app_name: string }], boolean>('Backend.run_extra_option');
 const get_scroll_to_app = callable<[{}], boolean>('Backend.get_scroll_to_app');
+const get_app_downgrader = callable<[{}], boolean>('Backend.get_app_downgrader');
 
 const WaitForElement = async (sel: string, parent = document) =>
 	[...(await Millennium.findElement(parent, sel))][0];
@@ -27,21 +29,26 @@ const WaitForElementTimeout = async (sel: string, parent = document, timeOut = 1
 const WaitForElementList = async (sel: string, parent = document) =>
 	[...(await Millennium.findElement(parent, sel))];
 
+async function runConsoleCommand(consoleCommand, desiredOutput) {
+    return new Promise((resolve) => {
+        const spewReader = SteamClient.Console.RegisterForSpewOutput((output) => {
+            console.log("[Steam Console]", output.spew);
+            if (desiredOutput.test(output.spew)) {
+                console.log("[steam-librarian] Found desired output!");
+                spewReader.unregister();
+                resolve(output.spew);
+            }
+        });
+        console.log("[steam-librarian] Executing", consoleCommand);
+        SteamClient.Console.ExecCommand(consoleCommand);
+    });
+}
+
 var scrollToColl = undefined;
 var scrollToApp = undefined;
 
 async function OnPopupCreation(popup: any) {
     if (popup.m_strName === "SP Desktop_uid0") {
-        var mwbm = undefined;
-        while (!mwbm) {
-            console.log("[steam-librarian] Waiting for MainWindowBrowserManager");
-            try {
-                mwbm = MainWindowBrowserManager;
-            } catch {
-                await sleep(100);
-            }
-        }
-
         MainWindowBrowserManager.m_browser.on("finished-request", async (currentURL, previousURL) => {
             if (MainWindowBrowserManager.m_lastLocation.pathname === "/library/home") {
                 const gameName = await get_autoselect_item({});
@@ -224,6 +231,66 @@ async function OnPopupCreation(popup: any) {
                 SteamClient.User.StartRestart(true);
             });
         }
+    } else if (popup.m_strName.startsWith("PopupWindow_")) {
+        const appDowngraderEnabled = await get_app_downgrader({});
+        if (appDowngraderEnabled) {
+            try {
+                const appGeneralPanel = await WaitForElementTimeout("div.DialogContent[id$='/properties/general_Content']", popup.m_popup.document);
+                if (appGeneralPanel) {
+                    const currentAppID = appGeneralPanel.id.substring(appGeneralPanel.id.indexOf("/app/") + "/app/".length, appGeneralPanel.id.indexOf("/properties/general_Content"));
+                    console.log("[steam-librarian] Detected App General Properties window for:", currentAppID);
+
+                    const contentPageObserver = new MutationObserver(async (mutationList, observer) => {
+                        if (appGeneralPanel.id.endsWith("/properties/updates_Content")) {
+                            const downgradeButton = popup.m_popup.document.createElement("div");
+                            render(<DialogButton style={{width: "100%"}}>Custom Up/Downgrade</DialogButton>, downgradeButton);
+                            const dBody = await WaitForElement("div.DialogBody", appGeneralPanel);
+                            dBody.appendChild(downgradeButton);
+
+                            downgradeButton.firstChild.addEventListener("click", async () => {
+                                console.log("[steam-librarian] Custom Up/Downgrade button clicked!");
+                                MainWindowBrowserManager.ShowURL(`https://steamdb.info/app/${currentAppID}/depots/#depots`);
+                                downgradeButton.firstChild.textContent = "Waiting for Manifest...";
+                                downgradeButton.firstChild.disabled = true;
+
+                                const manifestURLRegex = new RegExp("https://steamdb\\.info/depot/(\\d+)/history/\\?changeid=M:(.+)");
+                                while (popup.m_popup && !manifestURLRegex.test(MainWindowBrowserManager.m_URL)) {
+                                    await sleep(300);
+                                }
+                                if (!popup.m_popup) {
+                                    return;
+                                }
+
+                                const matches = manifestURLRegex.exec(MainWindowBrowserManager.m_URL);
+                                const depotID = matches[1];
+                                const manifestID = matches[2];
+                                console.log(`[steam-librarian] App: ${currentAppID}; Depot: ${depotID}; Manifest:`, manifestID);
+
+                                await SteamClient.Apps.SetAppAutoUpdateBehavior(parseInt(currentAppID), 1);
+                                console.log("[steam-librarian] App update behaviour set to 'Launch'");
+
+                                downgradeButton.firstChild.textContent = "Downloading Depot...";
+                                const downloadCommand = `download_depot ${currentAppID} ${depotID} ${manifestID}`;
+                                const downloadCompletedRegex = new RegExp(`Depot download complete *: *\"(.+)\" \\(manifest ${manifestID}\\)`);
+                                const downloadCompletedMessage = await runConsoleCommand(downloadCommand, downloadCompletedRegex);
+
+                                if (!popup.m_popup) {
+                                    return;
+                                }
+                                const depotDLDir = downloadCompletedRegex.exec(downloadCompletedMessage)[1];
+                                console.log("[steam-librarian] depotDLDir:", depotDLDir);
+                                
+                                downgradeButton.firstChild.textContent = "Updating app...";
+                                // TODO: Copy files
+
+                                downgradeButton.firstChild.textContent = "Done!";
+                            });
+                        }
+                    });
+                    contentPageObserver.observe(appGeneralPanel, { attributes: true, attributeFilter: ["id"] });
+                }
+            } catch {}
+        }
     }
 }
 
@@ -236,6 +303,16 @@ export default async function PluginMain() {
         typeof MainWindowBrowserManager === 'undefined'
     ) {
         await sleep(100);
+    }
+
+    var mwbm = undefined;
+    while (!mwbm) {
+        console.log("[steam-librarian] Waiting for MainWindowBrowserManager");
+        try {
+            mwbm = MainWindowBrowserManager;
+        } catch {
+            await sleep(100);
+        }
     }
 
     // Call the backend methods and log the configuration
@@ -261,6 +338,8 @@ export default async function PluginMain() {
     console.log("[steam-librarian] Result from get_restart_menu:", restartMenuEnabled);
     const scrollToAppEnabled = await get_scroll_to_app({});
     console.log("[steam-librarian] Result from get_scroll_to_app:", scrollToAppEnabled);
+    const appDowngraderEnabled = await get_app_downgrader({});
+    console.log("[steam-librarian] Result from get_app_downgrader:", appDowngraderEnabled);
 
     const doc = g_PopupManager.GetExistingPopup("SP Desktop_uid0");
 	if (doc) {

@@ -4,6 +4,6 @@
     "name": "steam-librarian",
     "common_name": "Steam Librarian",
     "description": "Extra functionality for the Steam Library tab",
-    "version": "1.0.10",
+    "version": "1.0.11",
     "include": ["defaults.json"]
 }

@@ -152,6 +152,14 @@ class Backend:
         logger.log(f"get_scroll_to_app() -> {scroll_to_app}")
         return scroll_to_app
 
+    @staticmethod
+    def get_app_downgrader():
+        app_downgrader = False
+        if "app_downgrader" in get_config():
+            app_downgrader = get_config()["app_downgrader"]
+        logger.log(f"get_app_downgrader() -> {app_downgrader}")
+        return app_downgrader
+
 class Plugin:
     def _front_end_loaded(self):
         logger.log("Frontend loaded")

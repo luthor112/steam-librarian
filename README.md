@@ -33,6 +33,7 @@ A Millennium plugin that adds extra functionality for the Steam Library tab.
     - Wait for the depot to be downloaded and the app patched
     - The app is also set to only update on launch
     - When all is done, the button will display `Done!`
+- To disable the download button for screenshots in the Community Hub, set `community_download` to `false`
 
 Big thanks to canitakemasoulbackpls!
 

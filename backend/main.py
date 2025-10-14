@@ -168,6 +168,14 @@ class Backend:
         except:
             return False
 
+    @staticmethod
+    def get_community_download():
+        community_download = True
+        if "community_download" in get_config():
+            community_download = get_config()["community_download"]
+        logger.log(f"get_community_download() -> {community_download}")
+        return community_download
+
 class Plugin:
     def _front_end_loaded(self):
         logger.log("Frontend loaded")

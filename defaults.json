@@ -13,5 +13,6 @@
     "restart_menu": false,
     "restart_menu_text": "Restart",
     "scroll_to_app": false,
-    "app_downgrader": false
+    "app_downgrader": false,
+    "community_download": true
 }

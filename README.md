@@ -42,3 +42,6 @@ Big thanks to canitakemasoulbackpls!
 
 ## Prerequisites
 - [Millennium](https://steambrew.app/)
+
+## Known issues:
+- "Scroll to App" is unfortunately janky and doesn't always work

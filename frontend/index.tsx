@@ -1,5 +1,5 @@
 import { callable, findClassModule, findModule, sleep, Millennium, Menu, MenuItem, DialogButton, showContextMenu } from "@steambrew/client";
-import { render } from "react-dom";
+import { createRoot } from "react-dom/client";
 
 // Backend functions
 const get_autoselect_item = callable<[{}], string>('Backend.get_autoselect_item');
@@ -244,7 +244,8 @@ async function OnPopupCreation(popup: any) {
                     const contentPageObserver = new MutationObserver(async (mutationList, observer) => {
                         if (appGeneralPanel.id.endsWith("/properties/updates_Content")) {
                             const downgradeButton = popup.m_popup.document.createElement("div");
-                            render(<DialogButton style={{width: "100%"}}>Custom Up/Downgrade</DialogButton>, downgradeButton);
+                            const downgradeButtonRoot = createRoot(downgradeButton);
+                            downgradeButtonRoot.render(<DialogButton style={{width: "100%"}}>Custom Up/Downgrade</DialogButton>);
                             const dBody = await WaitForElement("div.DialogBody", appGeneralPanel);
                             dBody.appendChild(downgradeButton);
 

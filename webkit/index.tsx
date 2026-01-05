@@ -1,6 +1,6 @@
 import { callable } from '@steambrew/webkit';
 
-const get_community_download = callable<[{}], boolean>('Backend.get_community_download');
+const get_community_download = callable<[{}], boolean>('get_community_download');
 
 function AddDownloadButton(ratingDiv) {
     const previewImg = ratingDiv.parentElement.parentElement.parentElement.querySelector("div.apphub_CardContentMain img");

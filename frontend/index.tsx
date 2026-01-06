@@ -343,6 +343,7 @@ async function OnPopupCreation(popup: any) {
 
 const SingleSetting = (props) => {
     const [boolValue, setBoolValue] = useState(false);
+    const [isDisabled, setIsDisabled] = useState(false);
 
     const saveConfig = () => {
         localStorage.setItem("luthor112.steam-librarian.config", JSON.stringify(pluginConfig));
@@ -352,18 +353,22 @@ const SingleSetting = (props) => {
         if (props.type === "bool") {
             setBoolValue(pluginConfig[props.name]);
         }
+
+        if (props.readonly) {
+            setIsDisabled(true);
+        }
     }, []);
 
     if (props.type === "bool") {
         return (
             <Field label={props.label} description={props.description} bottomSeparator="standard" focusable>
-                <Toggle value={boolValue} onChange={(value) => { setBoolValue(value); pluginConfig[props.name] = value; saveConfig(); }} />
+                <Toggle disabled={isDisabled} value={boolValue} onChange={(value) => { setBoolValue(value); pluginConfig[props.name] = value; saveConfig(); }} />
             </Field>
         );
     } else if (props.type === "text") {
         return (
             <Field label={props.label} description={props.description} bottomSeparator="standard" focusable>
-                <TextField defaultValue={pluginConfig[props.name]} onChange={(e: React.ChangeEvent<HTMLInputElement>) => { pluginConfig[props.name] = e.currentTarget.value; saveConfig(); }} />
+                <TextField disabled={isDisabled} defaultValue={pluginConfig[props.name]} onChange={(e: React.ChangeEvent<HTMLInputElement>) => { pluginConfig[props.name] = e.currentTarget.value; saveConfig(); }} />
             </Field>
         );
     }
@@ -386,7 +391,7 @@ const SettingsContent = () => {
             <SingleSetting name="restart_menu_text" type="text" label="Restart menu text" description="Customize the text of the Restart menu item" />
             <SingleSetting name="scroll_to_app" type="bool" label="Enable 'Scroll to App'" description="Add a 'Scroll to App' item to the extra Settings menu of every game (janky!)" />
             <SingleSetting name="app_downgrader" type="bool" label="Enable App Downgrader" description="Check ReadMe for instructions" />
-            <SingleSetting name="community_download" type="bool" label="Download button for screenshots" description="Add a download button for screenshots in the Community Hub" />
+            <SingleSetting name="community_download" type="bool" readonly={true} label="Download button for screenshots" description="Add a download button for screenshots in the Community Hub" />
         </div>
     );
 };

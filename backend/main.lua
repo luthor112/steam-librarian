@@ -28,6 +28,7 @@ end
 
 function get_community_download()
     local download_enabled = millennium.call_frontend_method("frontend_functions.get_community_download_setting", {})
+    local download_enabled = true
     logger:info("get_community_download -> " .. download_enabled)
     return download_enabled
 end

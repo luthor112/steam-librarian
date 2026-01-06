@@ -1,6 +1,6 @@
 import { callable } from '@steambrew/webkit';
 
-const get_community_download = callable<[{}], boolean>('get_community_download');
+//const get_community_download = callable<[{}], boolean>('get_community_download');
 
 function AddDownloadButton(ratingDiv) {
     const previewImg = ratingDiv.parentElement.parentElement.parentElement.querySelector("div.apphub_CardContentMain img");
@@ -20,7 +20,8 @@ function AddDownloadButton(ratingDiv) {
 }
 
 export default async function WebkitMain() {
-	const communityDownloadEnabled = await get_community_download({});
+	//const communityDownloadEnabled = await get_community_download({});
+    const communityDownloadEnabled = true;
 	console.log("[steam-librarian] Result from get_community_download:", communityDownloadEnabled);
 
     if (communityDownloadEnabled && window.location.href.startsWith("https://steamcommunity.com/app/")) {

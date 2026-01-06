@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 // Backend functions
 const fs_file_exists = callable<[{ file_path: string }], boolean>('fs_file_exists');
 const run_command = callable<[{ custom_command: string }], boolean>('run_command');
-const copy_files = callable<[{ source_dir: string, destination_dir: string }], boolean>('copy_files');
+const copy_files = callable<[{ a_source_dir: string, b_destination_dir: string }], boolean>('copy_files');
 
 const WaitForElement = async (sel: string, parent = document) =>
 	[...(await Millennium.findElement(parent, sel))][0];
@@ -35,10 +35,12 @@ var pluginConfig = {
 };
 
 function getExtraOptionsList() {
-    const strParts = pluginConfig.extra_options_str.split(";");
     let extraOptionsList = [];
-    for (let i = 0; i < strParts.length; i = i + 2) {
-        extraOptionsList.push([strParts[i], strParts[i+1]]);
+    if (pluginConfig.extra_options_str !== "") {
+        const strParts = pluginConfig.extra_options_str.split(";");
+        for (let i = 0; i < strParts.length; i = i + 2) {
+            extraOptionsList.push([strParts[i], strParts[i+1]]);
+        }
     }
     return extraOptionsList;
 };
@@ -326,7 +328,7 @@ async function OnPopupCreation(popup: any) {
                                 downgradeButton.firstChild.textContent = "Updating app...";
                                 await appDetailsStore.RequestAppDetails(parseInt(currentAppID));
                                 const appPath = appDetailsStore.GetAppDetails(parseInt(currentAppID)).strInstallFolder;
-                                await copy_files({ source_dir: depotDLDir, destination_dir: appPath });
+                                await copy_files({ a_source_dir: depotDLDir, b_destination_dir: appPath });
 
                                 downgradeButton.firstChild.textContent = "Done!";
                             });

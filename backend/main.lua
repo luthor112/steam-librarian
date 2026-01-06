@@ -17,7 +17,9 @@ function run_command(custom_command)
     return true
 end
 
-function copy_files(source_dir, destination_dir)
+function copy_files(a_source_dir, b_destination_dir)
+    source_dir = a_source_dir
+    destination_dir = b_destination_dir
     logger:info("copy_files -> " .. source_dir .. " to " .. destination_dir)
     fs.copy_recursive(source_dir, destination_dir, false)
     logger:info("copy_files -> Done")

@@ -8,13 +8,13 @@ const run_command = callable<[{ custom_command: string }], boolean>('run_command
 const copy_files = callable<[{ a_source_dir: string, b_destination_dir: string }], boolean>('copy_files');
 
 const WaitForElement = async (sel: string, parent = document) =>
-	[...(await Millennium.findElement(parent, sel))][0];
+    [...(await Millennium.findElement(parent, sel))][0];
 
 const WaitForElementTimeout = async (sel: string, parent = document, timeOut = 1000) =>
-	[...(await Millennium.findElement(parent, sel, timeOut))][0];
+    [...(await Millennium.findElement(parent, sel, timeOut))][0];
 
 const WaitForElementList = async (sel: string, parent = document) =>
-	[...(await Millennium.findElement(parent, sel))];
+    [...(await Millennium.findElement(parent, sel))];
 
 var pluginConfig = {
     autoselect: "",
@@ -31,8 +31,15 @@ var pluginConfig = {
     restart_menu_text: "Restart",
     scroll_to_app: false,
     app_downgrader: false,
-    community_download: true
+    community_download: true,
+    old_download_detection: false,
+    download_custom_command: ""
 };
+
+// 0: Do nothing
+// 1: Shut down
+// 2: Run custom command
+var downloadCompletionTask = 0;
 
 function getExtraOptionsList() {
     let extraOptionsList = [];
@@ -64,9 +71,9 @@ async function runExtraOption(opt_num, app_id, app_name) {
 }
 
 class frontend_functions {
-	static get_community_download_setting() {
-		return pluginConfig.community_download;
-	}
+    static get_community_download_setting() {
+        return pluginConfig.community_download;
+    }
 }
 
 // export frontend_functions class to global context
@@ -246,6 +253,59 @@ async function OnPopupCreation(popup: any) {
                 }
             }
         });
+
+        const downloadStatusPlace = await WaitForElement(`div.${findModule(e => e.DownloadStatusContent).DownloadStatusContent}`, popup.m_popup.document);
+        const oldDetection = pluginConfig.old_download_detection;
+        if (oldDetection) {
+            const downloadStatusPlaceObserver = new MutationObserver(async (mutationList, observer) => {
+                const downloadDetails = downloadStatusPlace.querySelector(`div.${findModule(e => e.DetailedDownloadProgress).DetailedDownloadProgress}`);
+                if (downloadDetails) {
+                    const downloadProgressBar = await WaitForElement(`div.${findModule(e => e.AnimateProgress).AnimateProgress}`, downloadDetails);
+                    const fromPercent = downloadProgressBar.style.cssText.substring(downloadProgressBar.style.cssText.indexOf("--percent:"));
+                    const realPercent = Number(fromPercent.substring(11, fromPercent.indexOf(";")))*100;
+
+                    console.log("[steam-librarian] Porgress bar percentage:", realPercent);
+                    if (realPercent === 100) {
+                        if (downloadCompletionTask == 1) {
+                            console.log("[steam-librarian] Download completed, shutting down");
+                            await run_command({ custom_command: "shutdown /s /t 0" });
+                        } else if (downloadCompletionTask == 2) {
+                            console.log("[steam-librarian] Download completed, running custom command");
+                            await run_command({ custom_command: pluginConfig.download_custom_command });
+                        }
+                        downloadCompletionTask = 0;
+                    }
+                }
+            });
+            downloadStatusPlaceObserver.observe(downloadStatusPlace, { childList: true, attributes: true, subtree: true });
+            console.log("[steam-librarian] Using old detection method - download observer started");
+        }
+        
+        downloadStatusPlace.addEventListener("contextmenu", async () => {
+            console.log("[steam-librarian] Right click detected, showing context menu...");
+            showContextMenu(
+                <Menu label="Download Options">
+                    <MenuItem onClick={async () => {
+                        downloadCompletionTask = 1;
+                    }}> Shutdown after completion </MenuItem>
+                    <MenuItem onClick={async () => {
+                        downloadCompletionTask = 2;
+                    }}> Run custom command after completion </MenuItem>
+                    <MenuItem onClick={async () => {
+                        downloadCompletionTask = 0;
+                    }}> Do nothing after completion </MenuItem>
+                    <MenuItem onClick={async () => {
+                        SteamClient.Downloads.EnableAllDownloads(true);
+                    }}> Unpause all downloads </MenuItem>
+                    <MenuItem onClick={async () => {
+                        SteamClient.Downloads.EnableAllDownloads(false);
+                    }}> Pause all downloads </MenuItem>
+                </Menu>,
+                downloadStatusPlace,
+                { bForcePopup: true }
+            );
+        });
+        console.log("[steam-librarian] Registered for right click on download indicator");
     } else if (popup.m_strTitle === "Menu") {
         const systrayEnabled = pluginConfig.millennium_systray;
         if (systrayEnabled) {
@@ -392,6 +452,8 @@ const SettingsContent = () => {
             <SingleSetting name="scroll_to_app" type="bool" label="Enable 'Scroll to App'" description="Add a 'Scroll to App' item to the extra Settings menu of every game (janky!)" />
             <SingleSetting name="app_downgrader" type="bool" label="Enable App Downgrader" description="Check ReadMe for instructions" />
             <SingleSetting name="community_download" type="bool" readonly={true} label="Download button for screenshots" description="Add a download button for screenshots in the Community Hub" />
+            <SingleSetting name="old_download_detection" type="bool" label="Use old download detection" description="Use the old, observer-based download detection" />
+            <SingleSetting name="download_custom_command" type="text" label="Custom command for download completion" description="Command to run on download completion" />
         </div>
     );
 };
@@ -423,9 +485,9 @@ async function pluginMain() {
     }
 
     const doc = g_PopupManager.GetExistingPopup("SP Desktop_uid0");
-	if (doc) {
-		OnPopupCreation(doc);
-	}
+    if (doc) {
+        OnPopupCreation(doc);
+    }
 
     g_PopupManager.m_mapPopups.data_.forEach(popup => {
         if (popup.value_.m_strTitle === "Menu" || popup.value_.m_strTitle === "Steam Root Menu") {
@@ -433,7 +495,7 @@ async function pluginMain() {
         }
     });
 
-	g_PopupManager.AddPopupCreatedCallback(OnPopupCreation);
+    g_PopupManager.AddPopupCreatedCallback(OnPopupCreation);
 
     if (pluginConfig.mark_shortcuts_offline) {
         for (const currentApp of appStore.allApps) {
@@ -453,13 +515,47 @@ async function pluginMain() {
             }
         }
     }
+
+    const oldDetection = pluginConfig.old_download_detection;
+    if (!oldDetection) {
+        var current_download_appid = 0;
+
+        SteamClient.Downloads.RegisterForDownloadOverview(async (event) => {
+            console.log(event);
+            if (event.update_appid === 0) {
+                console.log("[steam-librarian] Ignoring appid 0");
+            } else if (event.update_state === "Downloading") {
+                console.log("[steam-librarian] Download percentage:", event.overall_percent_complete);
+                current_download_appid = event.update_appid;
+            }
+        });
+
+        SteamClient.Downloads.RegisterForDownloadItems(async (isDownloading, downloadItems) => {
+            const current_app = downloadItems.find((el) => el.appid === current_download_appid);
+            if (current_app) {
+                if (current_app.completed) {
+                    if (downloadCompletionTask == 1) {
+                        console.log("[steam-librarian] Download completed, shutting down");
+                        await run_command({ custom_command: "shutdown /s /t 0" });
+                    } else if (downloadCompletionTask == 2) {
+                        console.log("[steam-librarian] Download completed, running custom command");
+                        await run_command({ custom_command: pluginConfig.download_custom_command });
+                    }
+                    current_download_appid = 0;
+                    downloadCompletionTask = 0;
+                }
+            }
+        });
+
+        console.log("[steam-librarian] Using new detection method - registered for download events");
+    }
 }
 
 export default definePlugin(async () => {
     await pluginMain();
     return {
-		title: "Steam Librarian",
-		icon: <IconsModule.Settings />,
-		content: <SettingsContent />,
-	};
+        title: "Steam Librarian",
+        icon: <IconsModule.Settings />,
+        content: <SettingsContent />,
+    };
 });

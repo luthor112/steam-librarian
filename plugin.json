@@ -3,7 +3,7 @@
 
     "name": "steam-librarian",
     "common_name": "Steam Librarian",
-    "description": "Extra functionality for the Steam Library tab",
-    "version": "2.0.0",
+    "description": "Extra functionality for the Steam Library",
+    "version": "2.1.0",
     "backendType": "lua"
 }

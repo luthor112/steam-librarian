@@ -1,6 +1,6 @@
 # Steam Librarian
 
-A Millennium plugin that adds extra functionality for the Steam Library tab.
+A Millennium plugin that adds extra functionality for the Steam Library.
 
 ## Features
 - Automatically select a game when opening the Library
@@ -30,6 +30,10 @@ A Millennium plugin that adds extra functionality for the Steam Library tab.
     - The app is also set to only update on launch
     - When all is done, the button will display `Done!`
 - Add a download button for screenshots in the Community Hub
+- Shutdown or run a command when a download completes
+    - Right click the download indicator to use
+- Pause or unpause all downloads
+    - Right click the download indicator to use
 
 Big thanks to canitakemasoulbackpls!
 
@@ -42,3 +46,4 @@ Big thanks to canitakemasoulbackpls!
 
 ## Known issues:
 - "Scroll to App" is unfortunately janky and doesn't always work
+- If the download progress is not picked up by the plugin, try turning on `Use old detection method` and restarting Steam

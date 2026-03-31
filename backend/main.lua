@@ -26,11 +26,11 @@ function copy_files(a_source_dir, b_destination_dir)
     return true
 end
 
-function get_community_download()
-    local download_enabled = millennium.call_frontend_method("frontend_functions.get_community_download_setting", {})
-    logger:info("get_community_download -> " .. download_enabled)
-    return download_enabled
-end
+-- function get_community_download()
+--     local download_enabled = millennium.call_frontend_method("frontend_functions.get_community_download_setting", {})
+--     logger:info("get_community_download -> " .. download_enabled)
+--     return download_enabled
+-- end
 
 -- PLUGIN MANAGEMENT
 

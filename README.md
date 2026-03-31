@@ -44,6 +44,11 @@ Big thanks to canitakemasoulbackpls!
 ## Prerequisites
 - [Millennium](https://steambrew.app/)
 
+## Installation
+- Copy the plugin ID from the [Millennium plugins](https://steambrew.app/plugins) page
+- Click `Plugins` and `Install a plugin` in the Millennium settings and paste the ID
+- Allow 10 seconds for the plugin to load after each startup
+
 ## Known issues:
 - "Scroll to App" is unfortunately janky and doesn't always work
 - If the download progress is not picked up by the plugin, try turning on `Use old detection method` and restarting Steam

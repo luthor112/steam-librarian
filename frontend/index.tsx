@@ -99,6 +99,17 @@ var scrollToApp = undefined;
 
 async function OnPopupCreation(popup: any) {
     if (popup.m_strName === "SP Desktop_uid0") {
+        await sleep(10000);
+        var mwbm = undefined;
+        while (!mwbm) {
+            console.log("[steam-librarian] Waiting for MainWindowBrowserManager");
+            try {
+                mwbm = MainWindowBrowserManager;
+            } catch {
+                await sleep(100);
+            }
+        }
+
         MainWindowBrowserManager.m_browser.on("finished-request", async (currentURL, previousURL) => {
             if (MainWindowBrowserManager.m_lastLocation.pathname === "/library/home") {
                 const gameName = pluginConfig.autoselect;
@@ -458,44 +469,14 @@ const SettingsContent = () => {
     );
 };
 
-async function pluginMain() {
-    console.log("[steam-librarian] frontend startup");
-    await App.WaitForServicesInitialized();
-    await sleep(100);
-
-    while (
-        typeof g_PopupManager === 'undefined' ||
-        typeof MainWindowBrowserManager === 'undefined'
-    ) {
-        await sleep(100);
-    }
+export default definePlugin(async () => {
+    console.log("[steam-librarian] Frontend startup");
 
     const storedConfig = JSON.parse(localStorage.getItem("luthor112.steam-librarian.config"));
     pluginConfig = { ...pluginConfig, ...storedConfig };
     console.log("[steam-librarian] Merged config:", pluginConfig);
 
-    var mwbm = undefined;
-    while (!mwbm) {
-        console.log("[steam-librarian] Waiting for MainWindowBrowserManager");
-        try {
-            mwbm = MainWindowBrowserManager;
-        } catch {
-            await sleep(100);
-        }
-    }
-
-    const doc = g_PopupManager.GetExistingPopup("SP Desktop_uid0");
-    if (doc) {
-        OnPopupCreation(doc);
-    }
-
-    g_PopupManager.m_mapPopups.data_.forEach(popup => {
-        if (popup.value_.m_strTitle === "Menu" || popup.value_.m_strTitle === "Steam Root Menu") {
-            OnPopupCreation(popup.value_);
-        }
-    });
-
-    g_PopupManager.AddPopupCreatedCallback(OnPopupCreation);
+    Millennium.AddWindowCreateHook(OnPopupCreation);
 
     if (pluginConfig.mark_shortcuts_offline) {
         for (const currentApp of appStore.allApps) {
@@ -549,10 +530,7 @@ async function pluginMain() {
 
         console.log("[steam-librarian] Using new detection method - registered for download events");
     }
-}
 
-export default definePlugin(async () => {
-    await pluginMain();
     return {
         title: "Steam Librarian",
         icon: <IconsModule.Settings />,

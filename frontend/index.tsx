@@ -1,4 +1,4 @@
-import { callable, findClassModule, findModule, sleep, Millennium, Menu, MenuItem, DialogButton, showContextMenu, IconsModule, definePlugin, Field, TextField, Toggle } from "@steambrew/client";
+import { callable, findClassModule, findModule, sleep, Millennium, Menu, MenuItem, DialogButton, showContextMenu, IconsModule, definePlugin, Field, TextField, Toggle, pluginSelf, DownloadItem } from "@steambrew/client";
 import { createRoot } from "react-dom/client";
 import React, { useState, useEffect } from "react";
 
@@ -500,21 +500,28 @@ export default definePlugin(async () => {
 
     const oldDetection = pluginConfig.old_download_detection;
     if (!oldDetection) {
-        var current_download_appid = 0;
+        pluginSelf.current_download_appid = 0;
 
-        SteamClient.Downloads.RegisterForDownloadOverview(async (event) => {
-            console.log(event);
+        SteamClient.Downloads.RegisterForDownloadOverview(async (event: any) => {
+            console.log("[steam-librarian] onDownloadOverview:", event);
+            const state: string = event.update_state;
+
+            console.log('[steam-librarian] Appid: ', event.update_appid);
+
             if (event.update_appid === 0) {
                 console.log("[steam-librarian] Ignoring appid 0");
-            } else if (event.update_state === "Downloading") {
+            } else if (state === 'Downloading' || state === 'Updating' || state === 'Patching' || state === 'Installing') {
                 console.log("[steam-librarian] Download percentage:", event.overall_percent_complete);
-                current_download_appid = event.update_appid;
+                pluginSelf.current_download_appid = event.update_appid;
             }
         });
 
-        SteamClient.Downloads.RegisterForDownloadItems(async (isDownloading, downloadItems) => {
-            const current_app = downloadItems.find((el) => el.appid === current_download_appid);
-            if (current_app) {
+        SteamClient.Downloads.RegisterForDownloadItems(async (isDownloading: boolean, downloadItems: any) => {
+            void isDownloading;
+
+            const current_app_item = downloadItems.find((el: any) => (el.item_data[0] as DownloadItem).appid === pluginSelf.current_download_appid);
+            if (current_app_item ) {
+                const current_app = current_app_item.item_data[0] as DownloadItem;
                 if (current_app.completed) {
                     if (downloadCompletionTask == 1) {
                         console.log("[steam-librarian] Download completed, shutting down");
@@ -523,7 +530,7 @@ export default definePlugin(async () => {
                         console.log("[steam-librarian] Download completed, running custom command");
                         await run_command({ custom_command: pluginConfig.download_custom_command });
                     }
-                    current_download_appid = 0;
+                    pluginSelf.current_download_appid = 0;
                     downloadCompletionTask = 0;
                 }
             }

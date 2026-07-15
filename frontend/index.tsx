@@ -267,32 +267,6 @@ async function OnPopupCreation(popup: any) {
         });
 
         const downloadStatusPlace = await WaitForElement(`div.${findModule(e => e.DownloadStatusContent).DownloadStatusContent}`, popup.m_popup.document);
-        const oldDetection = pluginConfig.old_download_detection;
-        if (oldDetection) {
-            const downloadStatusPlaceObserver = new MutationObserver(async (mutationList, observer) => {
-                const downloadDetails = downloadStatusPlace.querySelector(`div.${findModule(e => e.DetailedDownloadProgress).DetailedDownloadProgress}`);
-                if (downloadDetails) {
-                    const downloadProgressBar = await WaitForElement(`div.${findModule(e => e.AnimateProgress).AnimateProgress}`, downloadDetails);
-                    const fromPercent = downloadProgressBar.style.cssText.substring(downloadProgressBar.style.cssText.indexOf("--percent:"));
-                    const realPercent = Number(fromPercent.substring(11, fromPercent.indexOf(";")))*100;
-
-                    console.log("[steam-librarian] Porgress bar percentage:", realPercent);
-                    if (realPercent === 100) {
-                        if (downloadCompletionTask == 1) {
-                            console.log("[steam-librarian] Download completed, shutting down");
-                            await run_command({ custom_command: "shutdown /s /t 0" });
-                        } else if (downloadCompletionTask == 2) {
-                            console.log("[steam-librarian] Download completed, running custom command");
-                            await run_command({ custom_command: pluginConfig.download_custom_command });
-                        }
-                        downloadCompletionTask = 0;
-                    }
-                }
-            });
-            downloadStatusPlaceObserver.observe(downloadStatusPlace, { childList: true, attributes: true, subtree: true });
-            console.log("[steam-librarian] Using old detection method - download observer started");
-        }
-        
         downloadStatusPlace.addEventListener("contextmenu", async () => {
             console.log("[steam-librarian] Right click detected, showing context menu...");
             showContextMenu(
@@ -464,7 +438,6 @@ const SettingsContent = () => {
             <SingleSetting name="scroll_to_app" type="bool" label="Enable 'Scroll to App'" description="Add a 'Scroll to App' item to the extra Settings menu of every game (janky!)" />
             <SingleSetting name="app_downgrader" type="bool" label="Enable App Downgrader" description="Check ReadMe for instructions" />
             <SingleSetting name="community_download" type="bool" readonly={true} label="Download button for screenshots" description="Add a download button for screenshots in the Community Hub" />
-            <SingleSetting name="old_download_detection" type="bool" label="Use old download detection" description="Use the old, observer-based download detection" />
             <SingleSetting name="download_custom_command" type="text" label="Custom command for download completion" description="Command to run on download completion" />
         </div>
     );
@@ -498,7 +471,7 @@ export default definePlugin(async () => {
         }
     }
 
-    const oldDetection = pluginConfig.old_download_detection;
+    const oldDetection = false;
     if (!oldDetection) {
         pluginSelf.current_download_appid = 0;
 

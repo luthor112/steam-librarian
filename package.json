@@ -12,7 +12,7 @@
   },
   "type": "module",
   "name": "steam-librarian",
-  "version": "2.1.2",
+  "version": "3.0.0",
   "description": "Extra functionality for the Steam Library",
   "main": "./frontend/index.jsx",
   "author": "luthor112",

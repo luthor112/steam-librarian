@@ -1,10 +1,14 @@
-import { callable } from '@steambrew/webkit';
+//import { callable } from '@steambrew/webkit';
+
+declare global {
+    var SteamClient: any;
+}
 
 //const get_community_download = callable<[{}], boolean>('get_community_download');
 
-function AddDownloadButton(ratingDiv) {
-    const previewImg = ratingDiv.parentElement.parentElement.parentElement.querySelector("div.apphub_CardContentMain img");
-    const imgSrc = previewImg.src.substring(0, previewImg.src.indexOf("?"));
+function AddDownloadButton(ratingDiv: Element) {
+    const previewImg = ratingDiv.parentElement!.parentElement!.parentElement!.querySelector("div.apphub_CardContentMain img") as HTMLImageElement;
+    const imgSrc = previewImg!.src.substring(0, previewImg.src.indexOf("?"));
 
     const dlBtn = document.createElement("a");
     dlBtn.className = "btn_grey_grey btn_small_thin ico_hover";
@@ -32,9 +36,11 @@ export default async function WebkitMain() {
     }
 
     const contentPageObserver = new MutationObserver((mutationList, observer) => {
+        void observer;
+
         for (const mutation of mutationList) {
             for (const addedNode of mutation.addedNodes) {
-                const addedRatingDivs = addedNode.querySelectorAll("div.apphub_CardRatingButtons:not(.extra-dl-button-added)");
+                const addedRatingDivs = (addedNode as HTMLElement).querySelectorAll("div.apphub_CardRatingButtons:not(.extra-dl-button-added)");
                 for (const addedRatingDiv of addedRatingDivs) {
                     AddDownloadButton(addedRatingDiv);
                 }

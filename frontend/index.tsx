@@ -1,6 +1,15 @@
-import { callable, findClassModule, findModule, sleep, Millennium, Menu, MenuItem, DialogButton, showContextMenu, IconsModule, definePlugin, Field, TextField, Toggle, pluginSelf, DownloadItem } from "@steambrew/client";
+import { callable, findModule, sleep, Millennium, Menu, MenuItem, DialogButton, showContextMenu, IconsModule, definePlugin, Field, TextField, Toggle, pluginSelf, DownloadItem } from "@steambrew/client";
 import { createRoot } from "react-dom/client";
 import React, { useState, useEffect } from "react";
+
+declare global {
+    var MainWindowBrowserManager: any;
+    var SteamUIStore: any;
+    var uiStore: any;
+    var appStore: any;
+    var appDetailsStore: any;
+    var collectionStore: any;
+}
 
 // Backend functions
 const fs_file_exists = callable<[{ file_path: string }], boolean>('fs_file_exists');
@@ -16,7 +25,27 @@ const WaitForElementTimeout = async (sel: string, parent = document, timeOut = 1
 const WaitForElementList = async (sel: string, parent = document) =>
     [...(await Millennium.findElement(parent, sel))];
 
-var pluginConfig = {
+type PluginConfig = {
+    autoselect: string;
+    open_details: boolean;
+    library_size: string;
+    millennium_systray: boolean;
+    millennium_systray_text: string;
+    remove_news: boolean;
+    remove_review_ask: boolean;
+    extra_options_str: string;
+    mark_shortcuts_offline: boolean;
+    check_shortcuts_exist: boolean;
+    restart_menu: boolean;
+    restart_menu_text: string;
+    scroll_to_app: boolean;
+    app_downgrader: boolean;
+    community_download: boolean;
+    old_download_detection: boolean;
+    download_custom_command: string;
+}
+
+var pluginConfig: PluginConfig = {
     autoselect: "",
     open_details: false,
     library_size: "",
@@ -39,7 +68,7 @@ var pluginConfig = {
 // 0: Do nothing
 // 1: Shut down
 // 2: Run custom command
-var downloadCompletionTask = 0;
+var downloadCompletionTask: number = 0;
 
 function getExtraOptionsList() {
     let extraOptionsList = [];
@@ -52,7 +81,7 @@ function getExtraOptionsList() {
     return extraOptionsList;
 };
 
-async function runExtraOption(opt_num, app_id, app_name) {
+async function runExtraOption(opt_num: number, app_id: number, app_name: string) {
     const extraOption = getExtraOptionsList()[opt_num][1];
     if (!extraOption.includes("://")) {
         const app_id_str = app_id.toString();
@@ -77,9 +106,9 @@ class frontend_functions {
 }
 
 // export frontend_functions class to global context
-Millennium.exposeObj({ frontend_functions });
+Millennium.exposeObj!({ frontend_functions });
 
-async function runConsoleCommand(consoleCommand, desiredOutput) {
+async function runConsoleCommand(consoleCommand: string, desiredOutput: RegExp): Promise<string> {
     return new Promise((resolve) => {
         const spewReader = SteamClient.Console.RegisterForSpewOutput((output) => {
             console.log("[Steam Console]", output.spew);
@@ -94,10 +123,11 @@ async function runConsoleCommand(consoleCommand, desiredOutput) {
     });
 }
 
-var scrollToColl = undefined;
-var scrollToApp = undefined;
+var scrollToColl: string | undefined = undefined;
+var scrollToApp: number | undefined = undefined;
 
 async function OnPopupCreation(popup: any) {
+    await sleep(10000);
     if (popup.m_strName === "SP Desktop_uid0") {
         await sleep(10000);
         var mwbm = undefined;
@@ -110,11 +140,14 @@ async function OnPopupCreation(popup: any) {
             }
         }
 
-        MainWindowBrowserManager.m_browser.on("finished-request", async (currentURL, previousURL) => {
+        MainWindowBrowserManager.m_browser.on("finished-request", async (currentURL: any, previousURL: any) => {
+            void currentURL;
+            void previousURL;
+
             if (MainWindowBrowserManager.m_lastLocation.pathname === "/library/home") {
                 const gameName = pluginConfig.autoselect;
                 if (gameName !== "") {
-                    const gameObj = appStore.allApps.find((x) => x.display_name === gameName);
+                    const gameObj = appStore.allApps.find((x: any) => x.display_name === gameName);
                     SteamUIStore.Navigate(`/library/app/${gameObj.appid}`);
                 }
 
@@ -122,7 +155,7 @@ async function OnPopupCreation(popup: any) {
                 if (desiredLibrarySize !== "") {
                     const libraryDisplay = await WaitForElement('div.LibraryDisplaySizeSmall, div.LibraryDisplaySizeMedium, div.LibraryDisplaySizeLarge', popup.m_popup.document);
                     const leftPanel = libraryDisplay.firstChild;
-                    leftPanel.style = `width: ${desiredLibrarySize}; min-width: 1px !important;`;
+                    (leftPanel! as HTMLElement).style = `width: ${desiredLibrarySize}; min-width: 1px !important;`;
                 }
 
                 const removeNews = pluginConfig.remove_news;
@@ -162,7 +195,7 @@ async function OnPopupCreation(popup: any) {
                         const collapsedGameDetails = await WaitForElementTimeout(`div.${findModule(e => e.AppDetailsCollapsed).AppDetailsCollapsed}`, popup.m_popup.document);
                         if (collapsedGameDetails) {
                             const infoIcon = await WaitForElement(`div.${findModule(e => e.InPage).InPage} div.${findModule(e => e.AppButtonsContainer).AppButtonsContainer} svg.SVGIcon_Information`, popup.m_popup.document);
-                            infoIcon.parentElement.click();
+                            infoIcon.parentElement!.click();
                         }
                     } catch {}
                 }
@@ -172,13 +205,13 @@ async function OnPopupCreation(popup: any) {
                 const scrollToAppEnabled = pluginConfig.scroll_to_app;
                 if (extraOptionsCount > 0 || scrollToAppEnabled) {
                     const gameSettingsButton = await WaitForElement(`div.${findModule(e => e.InPage).InPage} div.${findModule(e => e.AppButtonsContainer).AppButtonsContainer} > div.${findModule(e => e.MenuButtonContainer).MenuButtonContainer}:not([role="button"])`, popup.m_popup.document);
-                    const oldExtraSettingsButton = gameSettingsButton.parentNode.querySelector('div.extra-settings-button');
+                    const oldExtraSettingsButton = gameSettingsButton.parentNode!.querySelector('div.extra-settings-button');
                     if (!oldExtraSettingsButton) {
-                        const extraSettingsButton = gameSettingsButton.cloneNode(true);
+                        const extraSettingsButton = gameSettingsButton.cloneNode(true) as HTMLElement;
                         extraSettingsButton.classList.add("extra-settings-button");
                         extraSettingsButton.title = "Extra Settings";
-                        extraSettingsButton.firstChild.innerHTML = "+";
-                        gameSettingsButton.parentNode.insertBefore(extraSettingsButton, gameSettingsButton.nextSibling);
+                        (extraSettingsButton.firstChild! as HTMLElement).innerHTML = "+";
+                        gameSettingsButton.parentNode!.insertBefore(extraSettingsButton, gameSettingsButton.nextSibling);
 
                         extraSettingsButton.addEventListener("click", async () => {
                             const extraMenuItems = [];
@@ -197,7 +230,7 @@ async function OnPopupCreation(popup: any) {
                             for (let i = 0; i < extraOptionsCount; i++) {
                                 const itemName = extraOptionsList[i][0];
                                 const currentColl = collectionStore.GetCollection(uiStore.currentGameListSelection.strCollectionId);
-                                const currentApp = currentColl.allApps.find((x) => x.appid === uiStore.currentGameListSelection.nAppId);
+                                const currentApp = currentColl.allApps.find((x: any) => x.appid === uiStore.currentGameListSelection.nAppId);
                                 extraMenuItems.push(<MenuItem onClick={async () => { await runExtraOption(i, uiStore.currentGameListSelection.nAppId, currentApp.display_name); }}> {itemName} </MenuItem>);
                             }
 
@@ -219,8 +252,8 @@ async function OnPopupCreation(popup: any) {
                         if (reviewAskPane) {
                             const askParent = reviewAskPane.parentElement;
                             reviewAskPane.remove();
-                            if (askParent.children.length === 0) {
-                                askParent.remove();
+                            if (askParent!.children.length === 0) {
+                                askParent!.remove();
                             }
                         }
                     } catch {}
@@ -229,12 +262,12 @@ async function OnPopupCreation(popup: any) {
                 const markShortcutsOffline = pluginConfig.mark_shortcuts_offline;
                 const checkShortcutsExist = pluginConfig.check_shortcuts_exist;
                 if (markShortcutsOffline) {
-                    const currentApp = appStore.allApps.find((x) => x.appid === uiStore.currentGameListSelection.nAppId);
+                    const currentApp = appStore.allApps.find((x: any) => x.appid === uiStore.currentGameListSelection.nAppId);
                     if (currentApp.BIsShortcut()) {
                         currentApp.per_client_data[0].installed = false;
                     }
                 } else if (checkShortcutsExist) {
-                    const currentApp = appStore.allApps.find((x) => x.appid === uiStore.currentGameListSelection.nAppId);
+                    const currentApp = appStore.allApps.find((x: any) => x.appid === uiStore.currentGameListSelection.nAppId);
                     if (currentApp.BIsShortcut()) {
                         await appDetailsStore.RequestAppDetails(currentApp.appid);
                         const binaryPath = appDetailsStore.GetAppDetails(currentApp.appid).strShortcutExe;
@@ -258,7 +291,7 @@ async function OnPopupCreation(popup: any) {
                             break;
                         } else {
                             console.log("[steam-librarian] App image not found, scrolling to current bottom...");
-                            appGrid.children[appGrid.children.length - 1].querySelector('img').scrollIntoView({ block: "end" });
+                            appGrid.children[appGrid.children.length - 1].querySelector('img')!.scrollIntoView({ block: "end" });
                             await sleep(100);
                         }
                     }
@@ -297,11 +330,11 @@ async function OnPopupCreation(popup: any) {
         if (systrayEnabled) {
             const menuItemList = await WaitForElementList(`div#popup_target div.contextMenuItem > div.${findModule(e => e.JumpListItemText).JumpListItemText}`, popup.m_popup.document);
             const exitItem = menuItemList[menuItemList.length - 1].parentNode;
-            const millenniumItem = exitItem.cloneNode(true);
+            const millenniumItem = exitItem!.cloneNode(true);
 
             const systrayText = pluginConfig.millennium_systray_text;
-            millenniumItem.firstChild.textContent = systrayText;
-            exitItem.parentNode.insertBefore(millenniumItem, exitItem.previousSibling);
+            millenniumItem.firstChild!.textContent = systrayText;
+            exitItem!.parentNode!.insertBefore(millenniumItem, exitItem!.previousSibling);
             millenniumItem.addEventListener("click", async () => {
                 SteamUIStore.Navigate("/millennium/settings");
             });
@@ -316,7 +349,7 @@ async function OnPopupCreation(popup: any) {
 
             const restartMenuText = pluginConfig.restart_menu_text;
             restartItem.textContent = restartMenuText;
-            exitItem.parentNode.insertBefore(restartItem, exitItem);
+            exitItem.parentNode!.insertBefore(restartItem, exitItem);
             restartItem.addEventListener("click", async () => {
                 SteamClient.User.StartRestart(true);
             });
@@ -331,11 +364,14 @@ async function OnPopupCreation(popup: any) {
                     console.log("[steam-librarian] Detected App General Properties window for:", currentAppID);
 
                     const contentPageObserver = new MutationObserver(async (mutationList, observer) => {
+                        void mutationList;
+                        void observer;
+
                         if (appGeneralPanel.id.endsWith("/properties/updates_Content")) {
                             const downgradeButton = popup.m_popup.document.createElement("div");
                             const downgradeButtonRoot = createRoot(downgradeButton);
                             downgradeButtonRoot.render(<DialogButton style={{width: "100%"}}>Custom Up/Downgrade</DialogButton>);
-                            const dBody = await WaitForElement("div.DialogBody", appGeneralPanel);
+                            const dBody = await WaitForElement("div.DialogBody", appGeneralPanel as any);
                             dBody.appendChild(downgradeButton);
 
                             downgradeButton.firstChild.addEventListener("click", async () => {
@@ -353,8 +389,8 @@ async function OnPopupCreation(popup: any) {
                                 }
 
                                 const matches = manifestURLRegex.exec(MainWindowBrowserManager.m_URL);
-                                const depotID = matches[1];
-                                const manifestID = matches[2];
+                                const depotID = matches![1];
+                                const manifestID = matches![2];
                                 console.log(`[steam-librarian] App: ${currentAppID}; Depot: ${depotID}; Manifest:`, manifestID);
 
                                 await SteamClient.Apps.SetAppAutoUpdateBehavior(parseInt(currentAppID), 1);
@@ -368,7 +404,7 @@ async function OnPopupCreation(popup: any) {
                                 if (!popup.m_popup) {
                                     return;
                                 }
-                                const depotDLDir = downloadCompletedRegex.exec(downloadCompletedMessage)[1];
+                                const depotDLDir = downloadCompletedRegex.exec(downloadCompletedMessage)![1];
                                 console.log("[steam-librarian] Download path:", depotDLDir);
                                 
                                 downgradeButton.firstChild.textContent = "Updating app...";
@@ -387,7 +423,19 @@ async function OnPopupCreation(popup: any) {
     }
 }
 
-const SingleSetting = (props) => {
+type BoolKeys = {
+    [K in keyof PluginConfig]: PluginConfig[K] extends boolean ? K : never
+  }[keyof PluginConfig];
+  
+type StringKeys = {
+    [K in keyof PluginConfig]: PluginConfig[K] extends string ? K : never
+}[keyof PluginConfig];
+
+type SingleSettingProps =
+  | { type: "bool"; name: BoolKeys; label: string; description: string, readonly?: boolean }
+  | { type: "text"; name: StringKeys; label: string; description: string, readonly?: boolean };
+
+const SingleSetting = (props: SingleSettingProps) => {
     const [boolValue, setBoolValue] = useState(false);
     const [isDisabled, setIsDisabled] = useState(false);
 
@@ -414,8 +462,12 @@ const SingleSetting = (props) => {
     } else if (props.type === "text") {
         return (
             <Field label={props.label} description={props.description} bottomSeparator="standard" focusable>
-                <TextField style={{ width: "100%", boxSizing: "border-box" }} disabled={isDisabled} defaultValue={pluginConfig[props.name]} onChange={(e: React.ChangeEvent<HTMLInputElement>) => { pluginConfig[props.name] = e.currentTarget.value; saveConfig(); }} />
+                <TextField style={{ width: "100%", boxSizing: "border-box" }} disabled={isDisabled} defaultValue={pluginConfig[props.name]} onChange={(e: React.ChangeEvent<HTMLInputElement>) => { (pluginConfig as any)[props.name] = e.currentTarget.value; saveConfig(); }} />
             </Field>
+        );
+    } else {
+        return (
+            <div>This should not happen...</div>
         );
     }
 }
@@ -446,11 +498,12 @@ const SettingsContent = () => {
 export default definePlugin(async () => {
     console.log("[steam-librarian] Frontend startup");
 
-    const storedConfig = JSON.parse(localStorage.getItem("luthor112.steam-librarian.config"));
+    const rawValue = localStorage.getItem("luthor112.steam-librarian.config");
+    const storedConfig: Partial<PluginConfig> = rawValue ? JSON.parse(rawValue) : {};
     pluginConfig = { ...pluginConfig, ...storedConfig };
     console.log("[steam-librarian] Merged config:", pluginConfig);
 
-    Millennium.AddWindowCreateHook(OnPopupCreation);
+    Millennium.AddWindowCreateHook!(OnPopupCreation);
 
     if (pluginConfig.mark_shortcuts_offline) {
         for (const currentApp of appStore.allApps) {

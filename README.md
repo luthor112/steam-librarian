@@ -35,7 +35,7 @@ A Millennium plugin that adds extra functionality for the Steam Library.
 - Pause or unpause all downloads
     - Right click the download indicator to use
 
-Big thanks to canitakemasoulbackpls!
+Big thanks to canitakemasoulbackpls and RAGE!
 
 ## Configuration
 - Configuration options are available through the Millennium Library Manager

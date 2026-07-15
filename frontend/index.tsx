@@ -176,6 +176,7 @@ async function OnPopupCreation(popup: any) {
                     if (!oldExtraSettingsButton) {
                         const extraSettingsButton = gameSettingsButton.cloneNode(true);
                         extraSettingsButton.classList.add("extra-settings-button");
+                        extraSettingsButton.title = "Extra Settings";
                         extraSettingsButton.firstChild.innerHTML = "+";
                         gameSettingsButton.parentNode.insertBefore(extraSettingsButton, gameSettingsButton.nextSibling);
 

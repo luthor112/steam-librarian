@@ -6,8 +6,16 @@ local fs = require("fs")
 
 function fs_file_exists(file_path)
     local noq_file_path = string.gsub(file_path, "\"", "")
-    local file_exists = fs.exists(noq_file_path)
-    logger:info("fs_file_exists -> " .. file_exists .. " for " .. noq_file_path)
+
+    local status, file_exists = pcall(function()
+        return fs.exists(noq_file_path)
+    end)
+
+    if not status or file_exists == nil then
+        file_exists = false
+    end
+
+    logger:info("fs_file_exists -> " .. tostring(file_exists) .. " for " .. noq_file_path)
     return file_exists
 end
 

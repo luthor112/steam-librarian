@@ -58,3 +58,11 @@ Big thanks to canitakemasoulbackpls and RAGE!
 ## Known issues:
 - "Scroll to App" is unfortunately janky and doesn't always work
 - If the download progress is not picked up by the plugin, try turning on `Use old detection method` and restarting Steam
+
+## Contributors
+
+<a href="https://github.com/luthor112/steam-librarian/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=luthor112/steam-librarian" />
+</a>
+
+Made with [contrib.rocks](https://contrib.rocks).

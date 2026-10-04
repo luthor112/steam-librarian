@@ -100,7 +100,8 @@ async function runExtraOption(opt_num: number, app_id: number, app_name: string)
 }
 
 class frontend_functions {
-    static get_community_download_setting() {
+    static get_community_download_setting(dummy: any) {
+        void dummy;
         return pluginConfig.community_download;
     }
 }
@@ -489,7 +490,7 @@ const SettingsContent = () => {
             <SingleSetting name="restart_menu_text" type="text" label="Restart menu text" description="Customize the text of the Restart menu item" />
             <SingleSetting name="scroll_to_app" type="bool" label="Enable 'Scroll to App'" description="Add a 'Scroll to App' item to the extra Settings menu of every game (janky!)" />
             <SingleSetting name="app_downgrader" type="bool" label="Enable App Downgrader" description="Check ReadMe for instructions" />
-            <SingleSetting name="community_download" type="bool" readonly={true} label="Download button for screenshots" description="Add a download button for screenshots in the Community Hub" />
+            <SingleSetting name="community_download" type="bool" label="Download button for screenshots" description="Add a download button for screenshots in the Community Hub" />
             <SingleSetting name="download_custom_command" type="text" label="Custom command for download completion" description="Command to run on download completion" />
         </div>
     );

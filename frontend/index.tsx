@@ -325,7 +325,7 @@ async function OnPopupCreation(popup: any) {
             );
         });
         console.log("[steam-librarian] Registered for right click on download indicator");
-    } else if (popup.m_strTitle === "Menu") {
+    } else if (popup.m_strTitle === "Menu" && popup.m_popup) {
         const systrayEnabled = pluginConfig.millennium_systray;
         if (systrayEnabled) {
             const menuItemList = await WaitForElementList(`div#popup_target div.contextMenuItem > div.${findModule(e => e.JumpListItemText).JumpListItemText}`, popup.m_popup.document);
@@ -524,46 +524,44 @@ export default definePlugin(async () => {
         }
     }
 
-    const oldDetection = false;
-    if (!oldDetection) {
-        pluginSelf.current_download_appid = 0;
+    pluginSelf.current_download_appid = 0;
 
-        SteamClient.Downloads.RegisterForDownloadOverview(async (event: any) => {
-            console.log("[steam-librarian] onDownloadOverview:", event);
-            const state: string = event.update_state;
+    SteamClient.Downloads.RegisterForDownloadOverview(async (event: any) => {
+        console.log("[steam-librarian] onDownloadOverview:", event);
+        const state: string = event.update_state;
 
-            console.log('[steam-librarian] Appid: ', event.update_appid);
+        console.log('[steam-librarian] Appid: ', event.update_appid);
 
-            if (event.update_appid === 0) {
-                console.log("[steam-librarian] Ignoring appid 0");
-            } else if (state === 'Downloading' || state === 'Updating' || state === 'Patching' || state === 'Installing') {
-                console.log("[steam-librarian] Download percentage:", event.overall_percent_complete);
-                pluginSelf.current_download_appid = event.update_appid;
-            }
-        });
+        if (event.update_appid === 0) {
+            console.log("[steam-librarian] Ignoring appid 0");
+        } else if (state === 'Downloading' || state === 'Updating' || state === 'Patching' || state === 'Installing') {
+            const percent: number = (event as any).overall_percent_complete;
+            console.log("[steam-librarian] Download percentage:", percent);
+            pluginSelf.current_download_appid = event.update_appid;
+        }
+    });
 
-        SteamClient.Downloads.RegisterForDownloadItems(async (isDownloading: boolean, downloadItems: any) => {
-            void isDownloading;
+    SteamClient.Downloads.RegisterForDownloadItems(async (isDownloading: boolean, downloadItems: any) => {
+        void isDownloading;
 
-            const current_app_item = downloadItems.find((el: any) => (el.item_data[0] as DownloadItem).appid === pluginSelf.current_download_appid);
-            if (current_app_item ) {
-                const current_app = current_app_item.item_data[0] as DownloadItem;
-                if (current_app.completed) {
-                    if (downloadCompletionTask == 1) {
-                        console.log("[steam-librarian] Download completed, shutting down");
-                        await run_command({ custom_command: "shutdown /s /t 0" });
-                    } else if (downloadCompletionTask == 2) {
-                        console.log("[steam-librarian] Download completed, running custom command");
-                        await run_command({ custom_command: pluginConfig.download_custom_command });
-                    }
-                    pluginSelf.current_download_appid = 0;
-                    downloadCompletionTask = 0;
+        const current_app_item = downloadItems.find((el: any) => ((el.item_data.length > 0) && (el.item_data[0] as DownloadItem).appid === pluginSelf.current_download_appid));
+        if (current_app_item ) {
+            const current_app = current_app_item.item_data[0] as DownloadItem;
+            if (current_app.completed) {
+                if (downloadCompletionTask == 1) {
+                    console.log("[steam-librarian] Download completed, shutting down");
+                    await run_command({ custom_command: "shutdown /s /t 0" });
+                } else if (downloadCompletionTask == 2) {
+                    console.log("[steam-librarian] Download completed, running custom command");
+                    await run_command({ custom_command: pluginConfig.download_custom_command });
                 }
+                pluginSelf.current_download_appid = 0;
+                downloadCompletionTask = 0;
             }
-        });
+        }
+    });
 
-        console.log("[steam-librarian] Using new detection method - registered for download events");
-    }
+    console.log("[steam-librarian] Using new detection method - registered for download events");
 
     return {
         title: "Steam Librarian",

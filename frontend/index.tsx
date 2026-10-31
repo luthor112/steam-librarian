@@ -127,7 +127,7 @@ var scrollToColl: string | undefined = undefined;
 var scrollToApp: number | undefined = undefined;
 
 async function OnPopupCreation(popup: any) {
-    await sleep(10000);
+    //await sleep(10000);
     if (popup.m_strName === "SP Desktop_uid0") {
         await sleep(10000);
         var mwbm = undefined;

@@ -208,6 +208,10 @@ async function OnPopupCreation(popup: any) {
                     const oldExtraSettingsButton = gameSettingsButton.parentNode!.querySelector('div.extra-settings-button');
                     if (!oldExtraSettingsButton) {
                         const extraSettingsButton = gameSettingsButton.cloneNode(true) as HTMLElement;
+                        const privateIndicator = extraSettingsButton.querySelector("div.PrivateAppActiveIndicator");
+                        if (privateIndicator) {
+                            privateIndicator.remove();
+                        }
                         extraSettingsButton.classList.add("extra-settings-button");
                         extraSettingsButton.title = "Extra Settings";
                         (extraSettingsButton.firstChild! as HTMLElement).innerHTML = "+";

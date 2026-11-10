@@ -40,7 +40,12 @@ export default async function WebkitMain() {
 
         for (const mutation of mutationList) {
             for (const addedNode of mutation.addedNodes) {
-                const addedRatingDivs = (addedNode as HTMLElement).querySelectorAll("div.apphub_CardRatingButtons:not(.extra-dl-button-added)");
+                // addedNodes also contains text and comment nodes, which have no querySelectorAll
+                if (!(addedNode instanceof Element)) {
+                    continue;
+                }
+
+                const addedRatingDivs = addedNode.querySelectorAll("div.apphub_CardRatingButtons:not(.extra-dl-button-added)");
                 for (const addedRatingDiv of addedRatingDivs) {
                     AddDownloadButton(addedRatingDiv);
                 }
